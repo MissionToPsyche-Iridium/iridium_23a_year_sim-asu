@@ -1,0 +1,247 @@
+        html, body { 
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', Arial, sans-serif !important; /* still cant get Roboto font to work smh*/
+            font-weight: 300;
+            background: linear-gradient(135deg, #592651, #302144); /* Gradient background */
+            color: white;
+            display: flex;
+            flex-direction: column
+        } 
+
+        html, body, #root {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;  
+            align-items: center;      
+            text-align: center;
+            padding: 0;
+            margin-bottom: 100px;
+        }
+
+        header { 
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            justify-content: space-between; 
+        }
+
+        header img { 
+            height: auto; width: 150px; 
+            margin-right: 1rem 
+        }
+
+        /* Style for the header buttons */
+        .header-buttons {
+            display: flex; 
+            justify-content: space-around; 
+            flex: 1; 
+        }
+
+        .header-button {
+            font-size: calc(1.8rem + 0.5vw); 
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            color: white;
+            transition: background-color 0.3s, transform 0.3s;
+            display: inline-block;
+            border-radius: 4px;
+            background-color: transparent;
+            text-align: center;
+            text-decoration: none;
+          }
+          
+        .header-button:hover { 
+            background-color: #f9a000; /* Change color on hover */
+            transform: scale(1.1);  /* Increase size by 10% when hovered */
+        }
+
+
+        .active-button { 
+            font-size: calc(1.8rem + 0.5vw); 
+            border: none; 
+            cursor: pointer; 
+            padding: 10px 20px; 
+            color: white;
+            transition: background-color 0.3s; 
+            display: inline-block; 
+            border-radius: 4px; background-color: transparent; 
+            text-align: center; 
+            text-decoration: none;
+            background-color: #f47c33; /*Change button color when button is selected*/
+            transition: transform 0.3s ease-in-out;  
+        }
+
+        .active-button:hover { 
+            background-color: #f9a000; /* Change color on hover */ 
+            transform: scale(1.1);  /* Increase size by 10% when hovered */
+        }
+
+        /* Style for the text */
+
+        h1 { 
+            font-size: calc(1.5rem + 1vw); /* Responsive font size for h1 */ 
+        }
+
+        h2 { 
+            font-size: calc(1.2rem + 1vw); /* Responsive font size for h2 */   
+        }
+
+        p {
+            font-size: calc(1rem + 0.5vw);  /* Responsive font size */
+            margin-top: -20px;  
+            margin-bottom: 20px;
+            padding: 0;
+            text-align: center;  
+        }
+
+        /* Style for the footer */
+        footer { 
+            flex-shrink: 0;  
+            background-color: #f47c33; 
+            padding: 1rem 2rem; 
+            justify-content: space-between; 
+            color: #302144;
+            border-top: 5px solid #f9a000; 
+            align-items: center; 
+            display: flex 
+        }
+
+
+        .footer-item {
+            flex: 1; 
+            font-size: calc(0.5rem + 0.5vw); 
+            text-align: center 
+        }
+
+
+        /* Style for the bottom right links */
+        .bottom-right-links { 
+            display: flex; position: absolute; 
+            right: 20px; 
+            bottom: 60px; 
+            align-items: flex-end;
+        }
+
+        .bottom-right-links a { 
+            color: white; 
+            margin-top: 5px; 
+            text-decoration: underline; 
+            border: none; 
+            transition: background-color 0.3s; 
+            padding: 5px 10px; 
+            border: none; 
+            text-decoration: underline; 
+            padding: 5px 10px; 
+            transition: background-color 0.3s; 
+            margin-top: 5px 
+        }
+
+        .bottom-right-links a:hover { 
+            /* Change color on hover */ 
+            color: #f9a000 
+        }
+
+        .bottom-right-links a.selected { 
+            /* Default color for Feedback Form link */ 
+            color: #f47c33 
+        }
+
+        /* Style for the social media buttons */
+        .image-button { 
+            margin-left: 5px; 
+            width: 50px; 
+            transition: transform 0.3s; 
+            height: 50px        
+        }
+
+        .image-button:hover { transform: scale(1.1);  }
+
+        /* Style for the psyche logo */
+        .psyche-logo {
+            width: 150px;   
+            height: auto;   
+            cursor: pointer;  
+            transition: transform 0.3s ease-in-out;  
+        }
+
+        /* Add hover effect for the Psyche logo */
+        .psyche-logo:hover { transform: scale(1.1); }
+
+
+        .button-image-container { 
+            display: flex;
+            justify-content: flex-start; 
+            align-items: center;
+            margin-top: .5rem;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: -200px;
+            width: fit-content; 
+        }
+
+        /* Styling for sim view controller buttons */
+        .button-group { 
+            margin-right: 1.5rem;
+            display: flex;
+            flex-direction: column 
+        }
+
+        .button-group button { 
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: calc(1rem + 0.5vw);
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 1rem; 
+            transition: background-color 0.3s; 
+        }
+
+        /* Add hover effect for the sim view controller buttons */
+        .button-group button:hover { 
+            color: #f9a000;
+            transform: scale(1.1); 
+        }
+
+        /* Active buttons for sim view controller buttons */
+        .button-active { color: #f47c33 !important; /* Change button color when pressed */ }
+
+        /* Styling for simulation placeholder */
+        .simulation-placeholder { 
+            max-width: 500px;
+            width: 60%;
+            height: auto;
+            transition: opacity 0.5s ease-in-out; 
+        }
+
+        /* Styling for transition effect between pictures */
+        .fade-out { opacity: 0; /* Image fades out */ }
+
+        .fade-in { /* Image fades in */opacity: 1 }
+
+        .home-page {
+            text-align: end;
+            justify-content: center;
+            align-items: center;
+            margin-top: -100px;  
+        }
+
+
+        
+        
+
+        
