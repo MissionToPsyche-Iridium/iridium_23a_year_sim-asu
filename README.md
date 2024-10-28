@@ -33,11 +33,11 @@ Replace <repository-url> with the URL of this repository.
 Move to the project folder using the following command:
 **Mac and Linux**:
 ```bash
-cd psyche-simulation
+cd iridium_23a_year_sim-asu
 ```
 **Windows**:
 ```cmd
-cd psyche-simulation
+cd iridium_23a_year_sim-asu
 ```
 
 ## 3. Install Dependencies
