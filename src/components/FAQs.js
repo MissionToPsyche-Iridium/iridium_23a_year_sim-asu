@@ -1,19 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet'; //Helmet to change page title
+import { Helmet } from 'react-helmet'; 
 import '../styles.css'; 
 
 const About = () => {
   const [openDropdowns, setOpenDropdowns] = useState({});
   const contentRefs = useRef({});
 
-  //Dropdowns for the questions
   const sections = [
     {
       title: "Mission",
       dropdowns: [
-        { id: 'mission1', label: "What is Psyche?", content: "Psyche is the name of an asteroid orbiting the Sun between Mars and Jupiter and the name of a NASA space mission to visit that asteroid, led by ASU. Psyche is the first mission to a world likely made largely of metal rather than rock or ice. (https://psyche.asu.edu/mission/faq/)", color: "#F3F3F4" },
-        { id: 'mission2', label: "What kind of mission is Psyche?", content: "Psyche is the 14th mission selected for NASA’s Discovery Program, a series of relatively low-cost missions to solar system targets. (https://psyche.asu.edu/mission/faq/)", color: "#F3F3F4" },
-        { id: 'mission3', label: "What is the timeline of the Psyche Mission?", content: '<a href="https://psyche.asu.edu/timeline/" target="_blank" rel="noopener noreferrer" style="color: #F3F3F4;">Click here</a> to look at the mission timeline.', color: "#F3F3F4" }
+        { id: 'mission1', label: "What is Psyche?", content: "Psyche is the name of an asteroid orbiting the Sun between Mars and Jupiter and the name of a NASA space mission to visit that asteroid, led by ASU. Psyche is the first mission to a world likely made largely of metal rather than rock or ice. <a href='https://psyche.asu.edu/mission/faq/' target='_blank' rel='noopener noreferrer' style='color: #F3F3F4;'>Learn more here</a>.", color: "#F3F3F4" },
+        { id: 'mission2', label: "What kind of mission is Psyche?", content: "Psyche is the 14th mission selected for NASA’s Discovery Program, a series of relatively low-cost missions to solar system targets. <a href='https://psyche.asu.edu/mission/faq/' target='_blank' rel='noopener noreferrer' style='color: #F3F3F4;'>Learn more here</a>.", color: "#F3F3F4" },
+        { id: 'mission3', label: "What is the timeline of the Psyche Mission?", content: "<a href='https://psyche.asu.edu/timeline/' target='_blank' rel='noopener noreferrer' style='color: #F3F3F4;'>Click here</a> to see the timeline.", color: "#F3F3F4" }
       ]
     },
     {
@@ -25,7 +24,6 @@ const About = () => {
     }
   ];
 
-  //To make the dropdowns slide smoothly
   const toggleDropdown = (id) => {
     setOpenDropdowns(prevState => {
       const isOpen = !prevState[id];
