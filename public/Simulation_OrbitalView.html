@@ -1,17 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Page for Psyche Year Simulation"
-    />
-    <title>Psyche Simulation</title>
-  </head>
-  <body>
-    <p>This is a test page for the iframe. Simulation will go here.</p>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Psyche Simulation - Asteroid</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #container { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+<div id="container"></div>
+
+<!-- Import Three.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // Initialize scene, camera, and renderer
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.getElementById('container').appendChild(renderer.domElement);
+
+  // Create asteroid geometry
+  const geometry = new THREE.SphereBufferGeometry(1, 64, 64);
+  
+  // Add random displacement for craters
+  const positions = geometry.attributes.position.array;
+  for (let i = 0; i < positions.length; i += 3) {
+    const offset = (Math.random() - 0.5) * 0.1;
+    positions[i] += offset;     // X coordinate
+    positions[i + 1] += offset; // Y coordinate
+    positions[i + 2] += offset; // Z coordinate
+  }
+  geometry.attributes.position.needsUpdate = true;
+
+  // Create material for the asteroid
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x808080,
+    roughness: 0.9,
+    metalness: 0.1,
+  });
+
+  // Create asteroid mesh
+  const asteroid = new THREE.Mesh(geometry, material);
+  scene.add(asteroid);
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+  scene.add(ambientLight);
+  const pointLight = new THREE.PointLight(0xffffff, 1.2);
+  pointLight.position.set(5, 5, 5);
+  scene.add(pointLight);
+
+  // Set camera position
+  camera.position.z = 3;
+
+  // Star field
+  const starGeometry = new THREE.BufferGeometry();
+  const starCount = 5000;
+  const starVertices = [];
+  for (let i = 0; i < starCount; i++) {
+    const x = (Math.random() - 0.5) * 100;
+    const y = (Math.random() - 0.5) * 100;
+    const z = (Math.random() - 0.5) * 100;
+    starVertices.push(x, y, z);
+  }
+  starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+  const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+  const stars = new THREE.Points(starGeometry, starMaterial);
+  scene.add(stars);
+
+  // Animation loop for asteroid rotation
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Rotate the asteroid
+    asteroid.rotation.y += 0.001;
+    asteroid.rotation.x += 0.0005;
+
+    // Render the scene
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Handle window resizing
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+</script>
+</body>
 </html>
