@@ -4,7 +4,6 @@ import '../styles.css';
 
 const Home = () => {
   // State to handle the image source
-  const [imageSrc, setImageSrc] = useState('/assets/PsycheSolarView.png');
   const [activeButton, setActiveButton] = useState('System View');  // For active button highlight
 
   // Function to handle image change
@@ -17,7 +16,6 @@ const Home = () => {
     image.classList.add('fade-out');
 
     setTimeout(() => {
-      setImageSrc(`/assets/${newSrc}`);
 
       setTimeout(() => {
         image.classList.remove('fade-out');
@@ -61,12 +59,11 @@ const Home = () => {
           </button>
         </div>
 
-        <img 
-          id="mainImage" 
-          src={imageSrc} 
-          alt="Simulation Placeholder" 
-          className="simulation-placeholder fade-in" 
-        />
+        <iframe 
+        src="Simulation_OrbitalView.html" 
+        name="Simulation_Iframe" 
+        title="Simulation of a Year on the Asteroid Psyche">
+        </iframe>
       </div>
     </main>
   );
