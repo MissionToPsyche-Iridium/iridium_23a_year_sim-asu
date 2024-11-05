@@ -62,8 +62,9 @@ const Home = () => {
         <iframe 
         src="Simulation_OrbitalView.html" 
         name="Simulation_Iframe" 
-        title="Simulation of a Year on the Asteroid Psyche">
-        </iframe>
+        title="Simulation of a Year on the Asteroid Psyche" 
+        style={{ width: '750px', height: '250px', border: 'none' }}
+        />
       </div>
     </main>
   );
