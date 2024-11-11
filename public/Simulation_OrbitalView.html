@@ -62,6 +62,10 @@
   const starGeometry = new THREE.BufferGeometry();
   const starCount = 5000;
   const starVertices = [];
+  const time = 1;
+  const day_x = 0.0005;
+  const day_y = 0.001;
+
   for (let i = 0; i < starCount; i++) {
     const x = (Math.random() - 0.5) * 100;
     const y = (Math.random() - 0.5) * 100;
@@ -86,6 +90,9 @@
     requestAnimationFrame(animate);
 
     // Update controls for smoothness
+    asteroid.rotation.x += day_x * time;
+    asteroid.rotation.y += day_y * time;
+    
     controls.update();
 
     // Render the scene
