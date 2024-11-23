@@ -3,25 +3,16 @@ import { Helmet } from 'react-helmet';  //Helmet to change page title
 import '../styles.css';  
 
 const Home = () => {
-  // State to handle the image source
-  const [activeButton, setActiveButton] = useState('System View');  // For active button highlight
+  // State to handle the active button and iframe source
+  const [activeButton, setActiveButton] = useState('System View');
+  const [iframeSrc, setIframeSrc] = useState('Simulation_OrbitalView.html'); // Default iframe source
 
-  // Function to handle image change
-  const changeImage = (newSrc, buttonLabel) => {
+  // Function to handle image change and iframe source update
+  const changeView = (buttonLabel, iframeSource) => {
     setActiveButton(buttonLabel);  // Set active button
 
-    // Simulate the fade-in/fade-out transition
-    const image = document.getElementById("mainImage");
-    image.classList.remove('fade-in');
-    image.classList.add('fade-out');
-
-    setTimeout(() => {
-
-      setTimeout(() => {
-        image.classList.remove('fade-out');
-        image.classList.add('fade-in');
-      }, 10);
-    }, 500);
+    // Change iframe source to switch views
+    setIframeSrc(iframeSource); 
   };
 
   return (
@@ -36,23 +27,22 @@ const Home = () => {
 
       <div className="button-image-container">
         <div className="button-group">
-            
           <button 
-            onClick={() => changeImage('PsycheSolarView.png', 'System View')}
+            onClick={() => changeView('System View', 'Simulation_OrbitalView.html')}
             className={activeButton === 'System View' ? 'button-active' : ''}
           >
             System View
           </button>
 
           <button 
-            onClick={() => changeImage('PsycheOrbitalView.png', 'Orbital View')}
+            onClick={() => changeView('Orbital View', 'Simulation_OrbitalView.html')}
             className={activeButton === 'Orbital View' ? 'button-active' : ''}
           >
             Orbital View
           </button>
 
           <button 
-            onClick={() => changeImage('PsycheTerrestrialView.png', 'Terrestrial View')}
+            onClick={() => changeView('Terrestrial View', 'Simulation_TerrestrialView.html')}
             className={activeButton === 'Terrestrial View' ? 'button-active' : ''}
           >
             Terrestrial View
@@ -60,10 +50,10 @@ const Home = () => {
         </div>
 
         <iframe 
-        src="Simulation_OrbitalView.html" 
-        name="Simulation_Iframe" 
-        title="Simulation of a Year on the Asteroid Psyche" 
-        style={{ width: '750px', height: '250px', border: 'none' }}
+          src={iframeSrc}  
+          name="Simulation_Iframe" 
+          title="Simulation of a Year on the Asteroid Psyche" 
+          style={{ width: '750px', height: '250px', border: 'none' }}
         />
       </div>
     </main>
