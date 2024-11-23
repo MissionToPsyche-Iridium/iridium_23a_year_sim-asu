@@ -17,6 +17,13 @@
       gap: 10px; 
       z-index: 10;
     }
+    #switch {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
     button {
       padding: 10px 20px;
       font-size: 16px;
@@ -43,6 +50,9 @@
   <button onclick="setState('normal')">Normal Mode</button>
   <button onclick="setState('horizon')">Horizon Mode</button>
   <button onclick="setState('heatmap')">Toggle Heat Map</button>
+</div>
+<div id="switch">
+  <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
 </div>
 
 <!-- Import Three.js -->
