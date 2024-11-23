@@ -27,6 +27,9 @@
   // Create asteroid geometry
   const geometry = new THREE.SphereBufferGeometry(1, 64, 64);
   
+  // Create Star Geometry
+  const star_geometry = new THREE.SphereBufferGeometry(3,256,256)
+  
   // Add random displacement for craters
   const positions = geometry.attributes.position.array;
   for (let i = 0; i < positions.length; i += 3) {
@@ -44,15 +47,26 @@
     metalness: 0.1,
   });
 
-  // Create asteroid mesh
+  // Create Material for the Star
+  const star_material = new THREE.MeshStandardMaterial({
+    color: 0xFCE5CD,
+    roughness: 0.1,
+    metalness: 0.5,
+  });
+
+
+  // Create star and asteroid mesh
   const asteroid = new THREE.Mesh(geometry, material);
+  const star = new THREE.Mesh(star_geometry,material)
   scene.add(asteroid);
+  star.position.set(512,512,512)
+  scene.add(star)
 
   // Add lights
   const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
   scene.add(ambientLight);
   const pointLight = new THREE.PointLight(0xffffff, 1.2);
-  pointLight.position.set(5, 5, 5);
+  pointLight.position.set(25, 25, 25);
   scene.add(pointLight);
 
   // Set camera position
@@ -86,6 +100,9 @@
   controls.enablePan = false;
 
   // Animation loop for asteroid rotation
+  // TODO: 
+    // Ensure rotation lines up with orbit/time correctly. Allowing us to rotate at a specific speed determined by time (which will later be manipulated by a slider/speedup UI element).
+    // Add "Orbital Path" variable/function that has a way for sliding the "asteroid" mesh in a circle around the star. The amount of distance moved along the arc each time the function is run should be a variable (for Mel to bind with time.)
   function animate() {
     requestAnimationFrame(animate);
 
