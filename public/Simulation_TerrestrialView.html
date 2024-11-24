@@ -47,9 +47,9 @@
 <body>
 <div id="container"></div>
 <div id="ui">
-  <button onclick="setState('normal')">Normal Mode</button>
-  <button onclick="setState('horizon')">Horizon Mode</button>
-  <button onclick="setState('heatmap')">Toggle Heat Map</button>
+  <button id="normalMode">Normal Mode</button>
+  <button id="horizonMode">Horizon Mode</button>
+  <button id="heightmapMode">Toggle Height Map</button>
 </div>
 <div id="switch">
   <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
@@ -61,7 +61,11 @@
 
 <script type="module">
   import { psycheAsteroid } from './asteroid.js';
-
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
+    document.getElementById('horizonMode').addEventListener('click', () => setState('horizon'));
+    document.getElementById('heightmapMode').addEventListener('click', () => addheightmapOverlay(asteroid));
+  });
   // Initialize the scene, camera, and renderer
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -97,10 +101,10 @@
   const stars = new THREE.Points(starGeometry, starMaterial);
   scene.add(stars);
 
-  //set camera center
+  // Set camera center
   camera.position.z = 3;
 
-  //controls to zoom in and stuff
+  // Controls to zoom in and stuff
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
@@ -108,27 +112,110 @@
   controls.autoRotate = false;
   controls.enablePan = false;
 
-  //limit how zoomed out and zoomed in terrestrial view can be
+  // Limit how zoomed out and zoomed in terrestrial view can be
   controls.minDistance = 1.2; 
   controls.maxDistance = 1.9; 
 
-  //set state
+  // Set state
   let currentState = 'normal';
 
   function setState(state) {
 
-  currentState = state;
+    currentState = state;
 
-  if (state === 'normal') {
-    camera.position.set(0, 0, 3);
-    controls.target.set(0, 0, 0);
-  } else if (state === 'horizon') {
-    camera.position.set(0, 1.5, 3);
-    controls.target.set(0, 1.5, 0);
+    if (state === 'normal') {
+        camera.position.set(0, 0, 3);
+        controls.target.set(0, 0, 0);
+        controls.minDistance = 1.3; 
+        controls.maxDistance = 1.9;
+        controls.enableRotate = true;
+    } else if (state === 'horizon') {
+        camera.position.set(0, 1.1, 3);
+        controls.target.set(0, 1.1, 0);
+        controls.minDistance = 1; 
+        controls.maxDistance = 1;
+        controls.enableRotate = false;
+    }
+
+    controls.update(); 
+    
   }
 
-  controls.update(); 
-}
+  let heightmapEnabled = false;
+
+  function addheightmapOverlay(asteroid) {
+    if (heightmapEnabled) {
+        // Remove the height map
+        asteroid.material = new THREE.MeshStandardMaterial({
+            color: 0x888888, 
+            flatShading: false,
+        });
+        heightmapEnabled = false;
+    } else {
+
+        // Apply the heightmap based on the distance of each vertex from the center of the asteroid (ridge height)
+        const geometry = asteroid.geometry;
+        const positionAttribute = geometry.getAttribute('position');
+        const vertexCount = positionAttribute.count;
+
+        // Calculate distances of each vertex from the center and find min and max distances
+        let minDistance = Infinity;
+        let maxDistance = -Infinity;
+
+        const center = new THREE.Vector3(0, 0, 0);
+
+        // Find min and max distances
+        for (let i = 0; i < vertexCount; i++) {
+        const vertex = new THREE.Vector3(
+            positionAttribute.getX(i),
+            positionAttribute.getY(i),
+            positionAttribute.getZ(i)
+        );
+
+        const distance = vertex.distanceTo(center);
+        if (distance < minDistance) minDistance = distance;
+        if (distance > maxDistance) maxDistance = distance;
+        }
+
+        const colors = [];
+        for (let i = 0; i < vertexCount; i++) {
+            const vertex = new THREE.Vector3(
+                positionAttribute.getX(i),
+                positionAttribute.getY(i),
+                positionAttribute.getZ(i)
+            );
+
+            const distance = vertex.distanceTo(center);
+            const normalizedHeight = (distance - minDistance) / (maxDistance - minDistance);
+
+            // Use color based on height value (using key from heightmap on taiga)
+            let color = new THREE.Color();
+            if (normalizedHeight > 0.8) {
+                color.setRGB(1.0, 0.2, 0.6); // Pink 
+            } else if (normalizedHeight > 0.6) {
+                color.setRGB(1.0, 0.0, 0.0); // Red 
+            } else if (normalizedHeight > 0.4) {
+                color.setRGB(1.0, 0.5, 0.0); // Orange 
+            } else if (normalizedHeight > 0.2) {
+                color.setRGB(1.0, 1.0, 0.0); // Yellow 
+            } else if (normalizedHeight > 0.1) {
+                color.setRGB(0.0, 1.0, 0.0); // Green 
+            } else {
+                color.setRGB(0.0, 0.0, 1.0); // Blue 
+            }
+
+            colors.push(color.r, color.g, color.b);
+        }
+
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        asteroid.material = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            flatShading: true,
+        });
+        heightmapEnabled = true;
+    }
+  }
+
 
   // Animation loop
   function animate() {
