@@ -91,6 +91,31 @@
     const z = (Math.random() - 0.5) * 100;
     starVertices.push(x, y, z);
   }
+
+    //adding the sun
+    const sunGeometry = new THREE.SphereBufferGeometry(10, 64, 64);
+  const sunMaterial = new THREE.MeshBasicMaterial({
+    color: 0xD14009,
+    emissive: 0xD14009,
+    emissiveIntensity: 2
+  });
+  const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+  sun.position.set(-70, 0, -30);
+  scene.add(sun);
+
+  //glowing halo around the sun
+  const haloRadius = 11;
+  const haloGeometry = new THREE.SphereBufferGeometry(haloRadius, 64, 64);
+  const haloMaterial = new THREE.MeshBasicMaterial({
+    color: 0xB90C05,
+    emissive: 0xB90C05,
+    emissiveIntensity: 0.9,
+    transparent: true,
+    opacity: 0.1,
+  });
+  const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+  halo.position.set(-70, 0, -30); // Position the halo around the sun
+  scene.add(halo);
   
   starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
   const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });

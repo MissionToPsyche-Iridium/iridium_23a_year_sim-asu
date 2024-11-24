@@ -90,6 +90,31 @@
   star.position.set(512,512,512)
   scene.add(star)
 
+  //adding the sun
+  const sunGeometry = new THREE.SphereBufferGeometry(10, 64, 64);
+  const sunMaterial = new THREE.MeshBasicMaterial({
+    color: 0xD14009,
+    emissive: 0xD14009,
+    emissiveIntensity: 2
+  });
+  const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+  sun.position.set(-70, 0, -30);
+  scene.add(sun);
+
+  //glowing halo around the sun
+  const haloRadius = 11;
+  const haloGeometry = new THREE.SphereBufferGeometry(haloRadius, 64, 64);
+  const haloMaterial = new THREE.MeshBasicMaterial({
+    color: 0xB90C05,
+    emissive: 0xB90C05,
+    emissiveIntensity: 0.9,
+    transparent: true,
+    opacity: 0.1,
+  });
+  const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+  halo.position.set(-70, 0, -30); // Position the halo around the sun
+  scene.add(halo);
+
   // Add lights
   const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
   scene.add(ambientLight);
@@ -97,7 +122,7 @@
   pointLight.position.set(25, 25, 25);
   scene.add(pointLight);
 
-  // Set camera position
+  //set camera center
   camera.position.z = 3;
 
   // Star field
@@ -109,9 +134,9 @@
   const day_y = 0.001;
 
   for (let i = 0; i < starCount; i++) {
-    const x = (Math.random() - 0.5) * 100;
-    const y = (Math.random() - 0.5) * 100;
-    const z = (Math.random() - 0.5) * 100;
+    const x = (Math.random() - 0.5) * 400;
+    const y = (Math.random() - 0.5) * 400;
+    const z = (Math.random() - 0.5) * 400;
     starVertices.push(x, y, z);
   }
   starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
@@ -119,13 +144,17 @@
   const stars = new THREE.Points(starGeometry, starMaterial);
   scene.add(stars);
   
-  //stuff for the click and drag 
+ //controls to zoom in and stuff
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
   controls.enableZoom = true;
-  controls.autoRotate = false; 
+  controls.autoRotate = false;
   controls.enablePan = false;
+
+  //limit how zoomed out and zoomed in terrestrial view can be
+  controls.minDistance = 2; 
+  controls.maxDistance = 20; 
 
   // Animation loop for asteroid rotation
   // TODO: 
