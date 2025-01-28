@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terrestrial View</title>
+  <title>Terrestrial View - Asteroid with Modes and Orbital Switch</title>
   <style>
     body { margin: 0; overflow: hidden; }
-    #container { width: 100vw; height: 100vh; }
+    #container { width: 100vw; height: 100vh; background-color: black; }
     #ui {
       position: absolute;
       top: 50%;
@@ -45,201 +45,162 @@
   </style>
 </head>
 <body>
-<div id="container"></div>
-<div id="ui">
-  <button id="normalMode">Normal Mode</button>
-  <button id="horizonMode">Horizon Mode</button>
-  <button id="heightmapMode">Toggle Height Map</button>
-</div>
-<div id="switch">
-  <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
-</div>
+  <div id="container"></div>
+  <div id="ui">
+    <button id="normalMode">Normal Mode</button>
+    <button id="horizonMode">Horizon Mode</button>
+  </div>
+  <div id="switch">
+    <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
+  </div>
 
-<!-- Import Three.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Import Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
-<script type="module">
-  import { psycheAsteroid } from './asteroid.js';
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
-    document.getElementById('horizonMode').addEventListener('click', () => setState('horizon'));
-    document.getElementById('heightmapMode').addEventListener('click', () => addheightmapOverlay(asteroid));
-  });
-  // Initialize the scene, camera, and renderer
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.getElementById('container').appendChild(renderer.domElement);
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
 
-  // Add the asteroid to the scene
-  const asteroid = psycheAsteroid();
-  scene.add(asteroid);
+      // Initialize the scene, camera, and renderer
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('container').appendChild(renderer.domElement);
 
-  // Add lighting
-  const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
-  scene.add(ambientLight);
-  const pointLight = new THREE.PointLight(0xffffff, 1.2);
-  pointLight.position.set(5, 5, 5);
-  scene.add(pointLight);
+      // Add Ambient Light
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      scene.add(ambientLight);
 
-  // Add star field
-  const starGeometry = new THREE.BufferGeometry();
-  const starCount = 5000;
-  const starVertices = [];
+      // Add Directional Light for better shadow and directional effect
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      directionalLight.position.set(-10, 10, 5);
+      scene.add(directionalLight);
 
-  for (let i = 0; i < starCount; i++) {
-    const x = (Math.random() - 0.5) * 100;
-    const y = (Math.random() - 0.5) * 100;
-    const z = (Math.random() - 0.5) * 100;
-    starVertices.push(x, y, z);
-  }
-  
-  starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-  const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
-  const stars = new THREE.Points(starGeometry, starMaterial);
-  scene.add(stars);
+      // Set up camera and controls
+      camera.position.set(0, 2, 5);
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.enableZoom = true;
+      controls.autoRotate = false;
+      controls.enablePan = false;
 
-  // Set camera center
-  camera.position.z = 3;
+      // Load the asteroid asynchronously using GLTFLoader
+      const loader = new THREE.GLTFLoader();
+      let asteroid = null;
 
-  // Controls to zoom in and stuff
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.enableZoom = true;
-  controls.autoRotate = false;
-  controls.enablePan = false;
+      // Create a parent group to add the asteroid to, for easier centering
+      const asteroidGroup = new THREE.Group();
+      scene.add(asteroidGroup);
 
-  // Limit how zoomed out and zoomed in terrestrial view can be
-  controls.minDistance = 1.2; 
-  controls.maxDistance = 1.9; 
+      loader.load(
+        './psycheModelCentered.glb',  
+        (gltf) => {
+          console.log("Asteroid loaded successfully");
+          asteroid = gltf.scene;
 
-  // Set state
-  let currentState = 'normal';
-
-  function setState(state) {
-
-    currentState = state;
-
-    if (state === 'normal') {
-        camera.position.set(0, 0, 3);
-        controls.target.set(0, 0, 0);
-        controls.minDistance = 1.3; 
-        controls.maxDistance = 1.9;
-        controls.enableRotate = true;
-    } else if (state === 'horizon') {
-        camera.position.set(0, 1.1, 3);
-        controls.target.set(0, 1.1, 0);
-        controls.minDistance = 1; 
-        controls.maxDistance = 1;
-        controls.enableRotate = false;
-    }
-
-    controls.update(); 
-    
-  }
-
-  let heightmapEnabled = false;
-
-  function addheightmapOverlay(asteroid) {
-    if (heightmapEnabled) {
-        // Remove the height map
-        asteroid.material = new THREE.MeshStandardMaterial({
-            color: 0x888888, 
-            flatShading: false,
-        });
-        heightmapEnabled = false;
-    } else {
-
-        // Apply the heightmap based on the distance of each vertex from the center of the asteroid (ridge height)
-        const geometry = asteroid.geometry;
-        const positionAttribute = geometry.getAttribute('position');
-        const vertexCount = positionAttribute.count;
-
-        // Calculate distances of each vertex from the center and find min and max distances
-        let minDistance = Infinity;
-        let maxDistance = -Infinity;
-
-        const center = new THREE.Vector3(0, 0, 0);
-
-        // Find min and max distances
-        for (let i = 0; i < vertexCount; i++) {
-        const vertex = new THREE.Vector3(
-            positionAttribute.getX(i),
-            positionAttribute.getY(i),
-            positionAttribute.getZ(i)
-        );
-
-        const distance = vertex.distanceTo(center);
-        if (distance < minDistance) minDistance = distance;
-        if (distance > maxDistance) maxDistance = distance;
-        }
-
-        const colors = [];
-        for (let i = 0; i < vertexCount; i++) {
-            const vertex = new THREE.Vector3(
-                positionAttribute.getX(i),
-                positionAttribute.getY(i),
-                positionAttribute.getZ(i)
-            );
-
-            const distance = vertex.distanceTo(center);
-            const normalizedHeight = (distance - minDistance) / (maxDistance - minDistance);
-
-            // Use color based on height value (using key from heightmap on taiga)
-            let color = new THREE.Color();
-            if (normalizedHeight > 0.8) {
-                color.setRGB(1.0, 0.2, 0.6); // Pink 
-            } else if (normalizedHeight > 0.6) {
-                color.setRGB(1.0, 0.0, 0.0); // Red 
-            } else if (normalizedHeight > 0.4) {
-                color.setRGB(1.0, 0.5, 0.0); // Orange 
-            } else if (normalizedHeight > 0.2) {
-                color.setRGB(1.0, 1.0, 0.0); // Yellow 
-            } else if (normalizedHeight > 0.1) {
-                color.setRGB(0.0, 1.0, 0.0); // Green 
-            } else {
-                color.setRGB(0.0, 0.0, 1.0); // Blue 
+          // Adjust material to be a darker gray and respond to lighting
+          asteroid.traverse((child) => {
+            if (child.isMesh) {
+              child.material = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.3 });
             }
+          });
 
-            colors.push(color.r, color.g, color.b);
+          // Compute the bounding box to center the asteroid
+          const box = new THREE.Box3().setFromObject(asteroid);
+          const center = box.getCenter(new THREE.Vector3());
+          asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
+
+          // Add the asteroid to the parent group
+          asteroidGroup.add(asteroid);
+
+          // Set the OrbitControls target to the asteroid's group center
+          controls.target.set(0, 0, 0);
+          controls.update();
+        },
+      
+      );
+
+      // Add star particles to the scene
+      function addStarParticles() {
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 5000;
+        const starVertices = [];
+        const time = 1;
+        const day_x = 0.0005;
+        const day_y = 0.001;
+
+        for (let i = 0; i < starCount; i++) {
+          const x = (Math.random() - 0.5) * 400;
+          const y = (Math.random() - 0.5) * 400;
+          const z = (Math.random() - 0.5) * 400;
+          starVertices.push(x, y, z);
+        }
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+      }
+
+      // Call the function to add star particles
+      addStarParticles();
+
+      // Viewing Modes
+      document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
+      document.getElementById('horizonMode').addEventListener('click', () => setState('horizon'));
+
+      // Set state management and other functions
+      let currentState = 'normal';
+
+      function setState(state) {
+        currentState = state;
+
+        if (state === 'normal') {
+          camera.position.set(0, 2, 5);
+          controls.target.set(0, 0, 0);
+          controls.minDistance = 1.5;
+          controls.maxDistance = 2.5;
+          controls.enableRotate = true;
+        } else if (state === 'horizon') {
+          camera.position.set(0, 1.1, 3);
+          controls.target.set(0, 1.1, 0);
+          controls.minDistance = 1.1;
+          controls.maxDistance = 1.1;
+          controls.enableRotate = false;
         }
 
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-        asteroid.material = new THREE.MeshStandardMaterial({
-            vertexColors: true,
-            flatShading: true,
-        });
-        heightmapEnabled = true;
-    }
-  }
+        controls.update();
+      }
 
+      // Set default state
+      setState('normal');
 
-  // Animation loop
-  function animate() {
-    requestAnimationFrame(animate);
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
 
-    // Rotate the asteroid
-    asteroid.rotation.x += 0.0005;
-    asteroid.rotation.y += 0.001;
+        // Rotate the asteroid group if the asteroid is loaded
+        if (asteroid) {
+          //asteroidGroup.rotation.x += 0.0005;
+          //asteroidGroup.rotation.y += 0.001;
+        }
 
-    // Render the scene
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  animate();
+        // Render the scene
+        controls.update();
+        renderer.render(scene, camera);
+      }
 
-  // Handle window resizing
-  window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  });
+      animate();
 
-  // Set default state
-  setState('normal');
-</script>
+      // Handle window resizing
+      window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      });
+    });
+  </script>
 </body>
 </html>
