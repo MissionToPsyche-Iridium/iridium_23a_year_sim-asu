@@ -49,6 +49,7 @@
   <div id="ui">
     <button id="normalMode">Normal Mode</button>
     <button id="horizonMode">Horizon Mode</button>
+    <button id="tempMap">Temperature Map</button>
   </div>
   <div id="switch">
     <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
@@ -90,6 +91,9 @@
       // Load the asteroid asynchronously using GLTFLoader
       const loader = new THREE.GLTFLoader();
       let asteroid = null;
+      let originalMaterial = null;
+      let tempMaterial = null;
+      let isTempMapActive = false;
 
       // Create a parent group to add the asteroid to, for easier centering
       const asteroidGroup = new THREE.Group();
@@ -101,17 +105,42 @@
           console.log("Asteroid loaded successfully");
           asteroid = gltf.scene;
 
+          //colors for temperature map
+          originalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.3 });
+          tempMaterial = new THREE.MeshStandardMaterial({ vertexColors: true });
+
           // Adjust material to be a darker gray and respond to lighting
           asteroid.traverse((child) => {
             if (child.isMesh) {
-              child.material = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.3 });
+              child.material = originalMaterial;
+              const geometry = child.geometry;
+              geometry.computeVertexNormals();
+              const positionAttribute = geometry.attributes.position;
+              const normalAttribute = geometry.attributes.normal;
+              const colors = [];
+              for (let i = 0; i < positionAttribute.count; i++) {
+                const normal = new THREE.Vector3(
+                  normalAttribute.getX(i),
+                  normalAttribute.getY(i),
+                  normalAttribute.getZ(i)
+                ).normalize();
+
+                // Dot product to check how much light a vertex receives
+                const lightIntensity = Math.max(normal.dot(directionalLight.position.clone().normalize()), 0);
+                
+                // Interpolate color from cold (blue) to hot (red)
+                const red = lightIntensity;
+                const blue = 1.0 - lightIntensity;
+                colors.push(red, 0, blue);  // RGB format
+              }
+              geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             }
           });
 
           // Compute the bounding box to center the asteroid
           const box = new THREE.Box3().setFromObject(asteroid);
           const center = box.getCenter(new THREE.Vector3());
-          asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
+          asteroid.position.sub(center); 
 
           // Add the asteroid to the parent group
           asteroidGroup.add(asteroid);
@@ -123,29 +152,34 @@
       
       );
 
-      // Add star particles to the scene
-      function addStarParticles() {
-        const starGeometry = new THREE.BufferGeometry();
-        const starCount = 5000;
-        const starVertices = [];
-        const time = 1;
-        const day_x = 0.0005;
-        const day_y = 0.001;
-
-        for (let i = 0; i < starCount; i++) {
-          const x = (Math.random() - 0.5) * 400;
-          const y = (Math.random() - 0.5) * 400;
-          const z = (Math.random() - 0.5) * 400;
-          starVertices.push(x, y, z);
+      document.getElementById('tempMap').addEventListener('click', () => {
+        if (asteroid) {
+          isTempMapActive = !isTempMapActive;
+          asteroid.traverse((child) => {
+            if (child.isMesh) {
+              child.material = isTempMapActive ? tempMaterial : originalMaterial;
+            }
+          });
         }
-        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
-        const stars = new THREE.Points(starGeometry, starMaterial);
-        scene.add(stars);
-      }
+      });
 
-      // Call the function to add star particles
-      addStarParticles();
+      const starGeometry = new THREE.BufferGeometry();
+      const starCount = 5000;
+      const starVertices = [];
+      const time = 1;
+      const day_x = 0.0005;
+      const day_y = 0.001;
+
+      for (let i = 0; i < starCount; i++) {
+        const x = (Math.random() - 0.5) * 400;
+        const y = (Math.random() - 0.5) * 400;
+        const z = (Math.random() - 0.5) * 400;
+        starVertices.push(x, y, z);
+      }
+      starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+      const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+      const stars = new THREE.Points(starGeometry, starMaterial);
+      scene.add(stars);
 
       // Viewing Modes
       document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
@@ -185,6 +219,7 @@
         if (asteroid) {
           //asteroidGroup.rotation.x += 0.0005;
           //asteroidGroup.rotation.y += 0.001;
+          
         }
 
         // Render the scene
