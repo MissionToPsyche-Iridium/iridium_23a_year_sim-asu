@@ -47,115 +47,115 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-  // Previous code for reference for those working in orbital view
-  //   // Initialize scene, camera, and renderer
-  //   const scene = new THREE.Scene();
-  //   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  //   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  //   renderer.setSize(window.innerWidth, window.innerHeight);
-  //   document.getElementById('container').appendChild(renderer.domElement);
+    // Previous code for reference for those working in orbital view
+    //   // Initialize scene, camera, and renderer
+    //   const scene = new THREE.Scene();
+    //   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    //   const renderer = new THREE.WebGLRenderer({ antialias: true });
+    //   renderer.setSize(window.innerWidth, window.innerHeight);
+    //   document.getElementById('container').appendChild(renderer.domElement);
 
-  //   // Create asteroid geometry
-  //   const geometry = new THREE.SphereBufferGeometry(1, 64, 64);
-    
-  //   // Create Star Geometry
-  //   const star_geometry = new THREE.SphereBufferGeometry(3,256,256)
-    
-  //   // Add random displacement for craters
-  //   const positions = geometry.attributes.position.array;
-  //   for (let i = 0; i < positions.length; i += 3) {
-  //     const offset = (Math.random() - 0.5) * 0.1;
-  //     positions[i] += offset;     // X coordinate
-  //     positions[i + 1] += offset; // Y coordinate
-  //     positions[i + 2] += offset; // Z coordinate
-  //   }
-  //   geometry.attributes.position.needsUpdate = true;
+    //   // Create asteroid geometry
+    //   const geometry = new THREE.SphereBufferGeometry(1, 64, 64);
+      
+    //   // Create Star Geometry
+    //   const star_geometry = new THREE.SphereBufferGeometry(3,256,256)
+      
+    //   // Add random displacement for craters
+    //   const positions = geometry.attributes.position.array;
+    //   for (let i = 0; i < positions.length; i += 3) {
+    //     const offset = (Math.random() - 0.5) * 0.1;
+    //     positions[i] += offset;     // X coordinate
+    //     positions[i + 1] += offset; // Y coordinate
+    //     positions[i + 2] += offset; // Z coordinate
+    //   }
+    //   geometry.attributes.position.needsUpdate = true;
 
-  //   // Create material for the asteroid
-  //   const material = new THREE.MeshStandardMaterial({
-  //     color: 0x808080,
-  //     roughness: 0.9,
-  //     metalness: 0.1,
-  //   });
+    //   // Create material for the asteroid
+    //   const material = new THREE.MeshStandardMaterial({
+    //     color: 0x808080,
+    //     roughness: 0.9,
+    //     metalness: 0.1,
+    //   });
 
-  //   // Create Material for the Star
-  //   const star_material = new THREE.MeshStandardMaterial({
-  //     color: 0xFCE5CD,
-  //     roughness: 0.1,
-  //     metalness: 0.5,
-  //   });
+    //   // Create Material for the Star
+    //   const star_material = new THREE.MeshStandardMaterial({
+    //     color: 0xFCE5CD,
+    //     roughness: 0.1,
+    //     metalness: 0.5,
+    //   });
 
 
-  //   // Create star and asteroid mesh
-  //   const asteroid = new THREE.Mesh(geometry, material);
-  //   const star = new THREE.Mesh(star_geometry,material)
-  //   scene.add(asteroid);
-  //   star.position.set(512,512,512)
-  //   scene.add(star)
+    //   // Create star and asteroid mesh
+    //   const asteroid = new THREE.Mesh(geometry, material);
+    //   const star = new THREE.Mesh(star_geometry,material)
+    //   scene.add(asteroid);
+    //   star.position.set(512,512,512)
+    //   scene.add(star)
 
-    
+      
 
-  //   // Add lights
-  //   const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
-  //   scene.add(ambientLight);
-  //   const pointLight = new THREE.PointLight(0xffffff, 1.2);
-  //   pointLight.position.set(25, 25, 25);
-  //   scene.add(pointLight);
+    //   // Add lights
+    //   const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+    //   scene.add(ambientLight);
+    //   const pointLight = new THREE.PointLight(0xffffff, 1.2);
+    //   pointLight.position.set(25, 25, 25);
+    //   scene.add(pointLight);
 
-  //   //set camera center
-  //   camera.position.z = 3;
+    //   //set camera center
+    //   camera.position.z = 3;
 
-  //   // Star field
-  //   const starGeometry = new THREE.BufferGeometry();
-  //   const starCount = 5000;
-  //   const starVertices = [];
-  //   const time = 1;
-  //   const day_x = 0.0005;
-  //   const day_y = 0.001;
+    //   // Star field
+    //   const starGeometry = new THREE.BufferGeometry();
+    //   const starCount = 5000;
+    //   const starVertices = [];
+    //   const time = 1;
+    //   const day_x = 0.0005;
+    //   const day_y = 0.001;
 
-  //   for (let i = 0; i < starCount; i++) {
-  //     const x = (Math.random() - 0.5) * 400;
-  //     const y = (Math.random() - 0.5) * 400;
-  //     const z = (Math.random() - 0.5) * 400;
-  //     starVertices.push(x, y, z);
-  //   }
-  //   starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-  //   const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
-  //   const stars = new THREE.Points(starGeometry, starMaterial);
-  //   scene.add(stars);
-    
-  // //controls to zoom in and stuff
-  //   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  //   controls.enableDamping = true;
-  //   controls.dampingFactor = 0.05;
-  //   controls.enableZoom = true;
-  //   controls.autoRotate = false;
-  //   controls.enablePan = false;
+    //   for (let i = 0; i < starCount; i++) {
+    //     const x = (Math.random() - 0.5) * 400;
+    //     const y = (Math.random() - 0.5) * 400;
+    //     const z = (Math.random() - 0.5) * 400;
+    //     starVertices.push(x, y, z);
+    //   }
+    //   starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    //   const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+    //   const stars = new THREE.Points(starGeometry, starMaterial);
+    //   scene.add(stars);
+      
+    // //controls to zoom in and stuff
+    //   const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    //   controls.enableDamping = true;
+    //   controls.dampingFactor = 0.05;
+    //   controls.enableZoom = true;
+    //   controls.autoRotate = false;
+    //   controls.enablePan = false;
 
-  //   //limit how zoomed out and zoomed in terrestrial view can be
-  //   controls.minDistance = 2; 
-  //   controls.maxDistance = 20; 
+    //   //limit how zoomed out and zoomed in terrestrial view can be
+    //   controls.minDistance = 2; 
+    //   controls.maxDistance = 20; 
 
-    //start of code for insert new asteroid
+    // Start of code for insert new asteroid
 
-    //add scene
+    // Add scene
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
 
-    //ambient light
+    // Ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
     scene.add(ambientLight);
     const pointLight = new THREE.PointLight(0xffffff, 1.5);
     pointLight.position.set(-10, 10, 5);
     scene.add(pointLight);
 
-    //set camera center
+    // Set camera center
     camera.position.z = 3;
 
-    //camera controls
+    // Camera controls
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
@@ -163,9 +163,9 @@
     controls.autoRotate = false;
     controls.enablePan = false;
 
-    //limit how zoomed out and zoomed in orbital view can be
-    controls.minDistance = 2; 
-    controls.maxDistance = 20;
+    // Limit how zoomed out and zoomed in orbital view can be
+    controls.minDistance = 5;
+    controls.maxDistance = 50;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -175,100 +175,78 @@
     const asteroidGroup = new THREE.Group();
     scene.add(asteroidGroup);
 
-
     loader.load(
-        './psycheModelCentered.glb',  
-        (gltf) => {
-          asteroid = gltf.scene;
+      './psycheModelCentered.glb',
+      (gltf) => {
+        asteroid = gltf.scene;
 
-          // Adjust material to be a darker gray and respond to lighting
-          asteroid.traverse((child) => {
-            if (child.isMesh) {
-              child.material = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8, metalness: 0.3 });
-            }
-          });
+        // Adjust material to be a darker gray and respond to lighting
+        asteroid.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8, metalness: 0.3 });
+          }
+        });
 
-          // Compute the bounding box to center the asteroid
-          const box = new THREE.Box3().setFromObject(asteroid);
-          const center = box.getCenter(new THREE.Vector3());
-          asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
+        // Compute the bounding box to center the asteroid
+        const box = new THREE.Box3().setFromObject(asteroid);
+        const center = box.getCenter(new THREE.Vector3());
+        asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
 
-          // Add the asteroid to the parent group
-          asteroidGroup.add(asteroid);
+        // Add the asteroid to the parent group
+        asteroidGroup.add(asteroid);
 
-          // Set the OrbitControls target to the asteroid's group center
-          controls.target.set(0, 0, 0);
-          controls.update();
-          
-        },
-      
-      );
-    
-      const starGeometry = new THREE.BufferGeometry();
-      const starCount = 5000;
-      const starVertices = [];
-      const time = 1;
-      const day_x = 0.0005;
-      const day_y = 0.001;
-
-      for (let i = 0; i < starCount; i++) {
-        const x = (Math.random() - 0.5) * 400;
-        const y = (Math.random() - 0.5) * 400;
-        const z = (Math.random() - 0.5) * 400;
-        starVertices.push(x, y, z);
+        // Set the OrbitControls target to the asteroid's group center
+        controls.target.set(0, 0, 0);
+        controls.update();
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading asteroid model:', error);
       }
-      starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-      const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
-      const stars = new THREE.Points(starGeometry, starMaterial);
-      scene.add(stars);
-  
+    );
 
-    //end of insert new asteroid
+    // Star field
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 5000;
+    const starVertices = [];
+    const time = 1;
+    const day_x = 0.0005;
+    const day_y = 0.001;
 
-    //adding the sun
-    const sunGeometry = new THREE.SphereBufferGeometry(10, 64, 64);
-    const sunMaterial = new THREE.MeshBasicMaterial({
-      color: 0xD14009,
-      emissive: 0xD14009,
-      emissiveIntensity: 2
-    });
-    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-    sun.position.set(-70, 0, -30);
-    scene.add(sun);
+    for (let i = 0; i < starCount; i++) {
+      const x = (Math.random() - 0.5) * 400;
+      const y = (Math.random() - 0.5) * 400;
+      const z = (Math.random() - 0.5) * 400;
+      starVertices.push(x, y, z);
+    }
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
 
-    //glowing halo around the sun
-    const haloRadius = 11;
-    const haloGeometry = new THREE.SphereBufferGeometry(haloRadius, 64, 64);
-    const haloMaterial = new THREE.MeshBasicMaterial({
-      color: 0xB90C05,
-      emissive: 0xB90C05,
-      emissiveIntensity: 0.9,
-      transparent: true,
-      opacity: 0.1,
-    });
-    const halo = new THREE.Mesh(haloGeometry, haloMaterial);
-    halo.position.set(-70, 0, -30); // Position the halo around the sun
-    scene.add(halo);
+    // Adding the sun using GLB model
+    const loader2 = new THREE.GLTFLoader();
 
-    
+    let sunModel = null;
+    loader2.load(
+      './sun.glb',
+      (gltf) => {
+        sunModel = gltf.scene;
+
+        console.log('Sun model loaded:', sunModel);
+
+        sunModel.position.set(-70, 0, -30);
+        sunModel.scale.set(0.1, 0.1, 0.1);
+
+        scene.add(sunModel);
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading sun model:', error);
+      }
+    );
 
     // Animation loop for asteroid rotation
-    // TODO: 
-      // Ensure rotation lines up with orbit/time correctly. Allowing us to rotate at a specific speed determined by time (which will later be manipulated by a slider/speedup UI element).
-      // Add "Orbital Path" variable/function that has a way for sliding the "asteroid" mesh in a circle around the star. The amount of distance moved along the arc each time the function is run should be a variable (for Mel to bind with time.)
-    // function animate() {
-    //   requestAnimationFrame(animate);
-
-    //   // Update controls for smoothness
-    //   asteroid.rotation.x += day_x * time;
-    //   asteroid.rotation.y += day_y * time;
-      
-    //   controls.update();
-
-    //   // Render the scene
-    //   renderer.render(scene, camera);
-    // }
-    // animate();
     function animate() {
       requestAnimationFrame(animate);
 
@@ -284,6 +262,49 @@
 
     animate();
 
+    // Create the orbital path
+    const createOrbitalPath = (radius, color = 0xffffff) => {
+      const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 64);
+      const orbitMaterial = new THREE.MeshBasicMaterial({
+        color: color,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5,
+      });
+
+      const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+      orbit.rotation.x = Math.PI / 2;
+      return orbit;
+    };
+
+    // Add the orbital path to the scene
+    const orbitRadius = 76;
+    const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
+    orbitPath.position.set(-70, 0, -30); // Match the sun's position
+    scene.add(orbitPath);
+
+    // Animation loop for asteroid rotation and orbital movement
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (asteroid) {
+        asteroid.rotation.x += day_x * time;
+        asteroid.rotation.y += day_y * time;
+
+        // Move the asteroid along the orbital path
+        const orbitalSpeed = 2;
+        const angle = performance.now() * 0.001 * orbitalSpeed;
+
+        // Update asteroid position along the orbit
+        asteroid.position.x = -70 + orbitRadius * Math.cos(-angle);
+        asteroid.position.z = -30 + orbitRadius * Math.sin(-angle);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
 
     // Handle window resizing
     window.addEventListener('resize', () => {
@@ -292,7 +313,6 @@
       camera.updateProjectionMatrix();
     });
   });
-  
 </script>
 </body>
 </html>
