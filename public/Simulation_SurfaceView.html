@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terrestrial View - Asteroid with Modes and Orbital Switch</title>
+  <title>Surface View - Asteroid with Modes and Orbital Switch</title>
   <style>
     body { margin: 0; overflow: hidden; }
     #container { width: 100vw; height: 100vh; background-color: black; }
@@ -50,6 +50,8 @@
     <button id="normalMode">Normal Mode</button>
     <button id="horizonMode">Horizon Mode</button>
     <button id="tempMap">Temperature Map</button>
+    <input id="timeSlider" type="range" min="0" max="100" value="50" step="1">
+    <label id="timeLabel">Time: 50</label>
   </div>
   <div id="switch">
     <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
@@ -152,6 +154,8 @@
       
       );
 
+      
+
       document.getElementById('tempMap').addEventListener('click', () => {
         if (asteroid) {
           isTempMapActive = !isTempMapActive;
@@ -180,6 +184,17 @@
       const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
       const stars = new THREE.Points(starGeometry, starMaterial);
       scene.add(stars);
+
+      const timeSlider = document.getElementById("timeSlider");
+      const timeLabel = document.getElementById("timeLabel");
+      timeSlider.addEventListener("input", () => {
+        const timeValue = timeSlider.value;
+        timeLabel.textContent = `Time: ${timeValue}`;
+        if (asteroid) {
+          const rotationAngle = (timeValue / 100) * Math.PI * 2;
+          asteroid.rotation.z = rotationAngle;
+        }
+      });
 
       // Viewing Modes
       document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
