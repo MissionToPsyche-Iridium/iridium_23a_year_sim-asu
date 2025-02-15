@@ -52,6 +52,7 @@
     <button id="tempMap">Temperature Map</button>
     <input id="timeSlider" type="range" min="0" max="100" value="50" step="1">
     <label id="timeLabel">Time: 50</label>
+    <button id="toggleRotation">Enable Auto-Rotate</button>
   </div>
   <div id="switch">
     <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
@@ -185,8 +186,12 @@
       const stars = new THREE.Points(starGeometry, starMaterial);
       scene.add(stars);
 
+
+      let autoRotate = false;
+      let rotationSpeed = 0.002;
       const timeSlider = document.getElementById("timeSlider");
       const timeLabel = document.getElementById("timeLabel");
+      const toggleRotationButton = document.getElementById("toggleRotation");
       timeSlider.addEventListener("input", () => {
         const timeValue = timeSlider.value;
         timeLabel.textContent = `Time: ${timeValue}`;
@@ -194,6 +199,11 @@
           const rotationAngle = (timeValue / 100) * Math.PI * 2;
           asteroid.rotation.z = rotationAngle;
         }
+      });
+      toggleRotationButton.addEventListener("click", () => {
+        autoRotate = !autoRotate;
+        timeSlider.disabled = autoRotate;
+        toggleRotationButton.textContent = autoRotate ? "Disable Auto-Rotate" : "Enable Auto-Rotate";
       });
 
       // Viewing Modes
@@ -231,10 +241,8 @@
         requestAnimationFrame(animate);
 
         // Rotate the asteroid group if the asteroid is loaded
-        if (asteroid) {
-          //asteroidGroup.rotation.x += 0.0005;
-          //asteroidGroup.rotation.y += 0.001;
-          
+        if (autoRotate && asteroid) {
+          asteroid.rotation.z -= rotationSpeed;
         }
 
         // Render the scene
