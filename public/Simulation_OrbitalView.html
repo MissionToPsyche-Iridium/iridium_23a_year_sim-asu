@@ -153,7 +153,7 @@
     scene.add(pointLight);
 
     // Set camera center
-    camera.position.z = 0;
+    // camera.position.z = 0;
 
     // Camera controls
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -165,7 +165,6 @@
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 5;
     controls.maxDistance = 2500;
-    controls.update();
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -246,22 +245,6 @@
       }
     );
 
-    // Animation loop for asteroid rotation
-    function rotateAnimate() {
-      requestAnimationFrame(rotateAnimate);
-
-      // Ensure the asteroid exists before rotating it
-      if (asteroid) {
-        asteroid.rotation.z += (-day_x*5) * time;
-        // asteroid.rotation.y += day_y * time;
-      }
-
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
-    rotateAnimate();
-
     // Create the orbital path
     const createOrbitalPath = (radius, color = 0xffffff) => {
       const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 64);
@@ -278,25 +261,39 @@
     };
 
     // Add the orbital path to the scene
-    const orbitRadius = 296;
+    const orbitRadius = 351;
     const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
     orbitPath.position.set(-290, 0, 0); // Match the sun's position
     scene.add(orbitPath);
 
-    // Animation loop for asteroid rotation and orbital movement
     let followAsteroid = true;
 
     function animate() {
       requestAnimationFrame(animate);
 
       if (asteroid) {
-        // Move asteroid in orbit
-        // const orbitalSpeed = 0.0000001923;
+
+        // the math is a little arbitrary
+        // psyche is 2.5 to 3.3 astronomical units away from the sun so i set the radius of the orbit as 351 
+        // (the sun is 61*61*61, and the average distance between the farthest and nearest points of psyche's distance from the sun is 290 (330+250/2))
+        // 
+        // the sun's position is set to -330, so it's not completely centered in the orbit radius
+        // this makes the furthest point between the sun and psyche 3.3 AUs, and the closest point 2.5 AUs, and the sun in between
+        // ensures the distance is accurate as its size is accounted for
+
+        // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
+        // circumference / the number of days it takes to orbit
+
+        // const orbitalSpeed = 0.0000001923; ACTUAL speed, keeping it at 0.01 for testing only
         const orbitalSpeed = 0.01;
         const angle = performance.now() * 0.001 * orbitalSpeed;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-angle);
         asteroid.position.z = 0 + orbitRadius * Math.sin(-angle);
+
+        asteroid.rotation.z += (-day_x*5) * time;
+
+        controls.update();
 
         if (followAsteroid) {
           // Camera offset relative to the asteroid
@@ -304,13 +301,14 @@
           const targetPosition = asteroid.position.clone().add(cameraOffset);
 
           // Smooth transition for camera position & look direction
-          camera.position.lerp(targetPosition, 0.1);
+          camera.position.lerp(targetPosition, 0);
           controls.target.lerp(asteroid.position, 0.1);
           // camera.lookAt(asteroid.position);
         }
+
       }
       
-      controls.update(); // Keep OrbitControls active
+      controls.update();
       renderer.render(scene, camera);
     }
 
