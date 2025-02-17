@@ -37,7 +37,7 @@
 <body>
 <div id="container"></div>
 <div id="switch">
-  <button onclick="window.location.href='Simulation_SurfaceView.html'">Switch to Surface View</button>
+  <button onclick="window.location.href='Simulation_SurfaceView.html'">Switch to Terrestrial View</button>
 </div>
 
 <!-- Import Three.js library -->
@@ -153,19 +153,19 @@
     scene.add(pointLight);
 
     // Set camera center
-    camera.position.z = 3;
+    camera.position.z = 0;
 
     // Camera controls
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
-    controls.autoRotate = false;
-    controls.enablePan = false;
+    controls.enablePan = true;
 
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 5;
-    controls.maxDistance = 50;
+    controls.maxDistance = 2500;
+    controls.update();
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -214,9 +214,9 @@
     const day_y = 0.001;
 
     for (let i = 0; i < starCount; i++) {
-      const x = (Math.random() - 0.5) * 400;
-      const y = (Math.random() - 0.5) * 400;
-      const z = (Math.random() - 0.5) * 400;
+      const x = (Math.random() - 0.5) * 5000;
+      const y = (Math.random() - 0.5) * 5000;
+      const z = (Math.random() - 0.5) * 5000;
       starVertices.push(x, y, z);
     }
     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
@@ -235,8 +235,8 @@
 
         console.log('Sun model loaded:', sunModel);
 
-        sunModel.position.set(-70, 0, -30);
-        sunModel.scale.set(0.1, 0.1, 0.1);
+        sunModel.position.set(-330, 0, 0);
+        sunModel.scale.set(0.61, 0.61, 0.61);
 
         scene.add(sunModel);
       },
@@ -247,20 +247,20 @@
     );
 
     // Animation loop for asteroid rotation
-    function animate() {
-      requestAnimationFrame(animate);
+    function rotateAnimate() {
+      requestAnimationFrame(rotateAnimate);
 
       // Ensure the asteroid exists before rotating it
       if (asteroid) {
-        asteroid.rotation.x += day_x * time;
-        asteroid.rotation.y += day_y * time;
+        asteroid.rotation.z += (-day_x*5) * time;
+        // asteroid.rotation.y += day_y * time;
       }
 
       controls.update();
       renderer.render(scene, camera);
     }
 
-    animate();
+    rotateAnimate();
 
     // Create the orbital path
     const createOrbitalPath = (radius, color = 0xffffff) => {
@@ -278,40 +278,51 @@
     };
 
     // Add the orbital path to the scene
-    const orbitRadius = 76;
+    const orbitRadius = 296;
     const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
-    orbitPath.position.set(-70, 0, -30); // Match the sun's position
+    orbitPath.position.set(-290, 0, 0); // Match the sun's position
     scene.add(orbitPath);
 
     // Animation loop for asteroid rotation and orbital movement
+    let followAsteroid = true;
+
     function animate() {
       requestAnimationFrame(animate);
 
       if (asteroid) {
-        asteroid.rotation.x += day_x * time;
-        asteroid.rotation.y += day_y * time;
-
-        // Move the asteroid along the orbital path
-        const orbitalSpeed = 2;
+        // Move asteroid in orbit
+        // const orbitalSpeed = 0.0000001923;
+        const orbitalSpeed = 0.01;
         const angle = performance.now() * 0.001 * orbitalSpeed;
 
-        // Update asteroid position along the orbit
-        asteroid.position.x = -70 + orbitRadius * Math.cos(-angle);
-        asteroid.position.z = -30 + orbitRadius * Math.sin(-angle);
-      }
+        asteroid.position.x = -290 + orbitRadius * Math.cos(-angle);
+        asteroid.position.z = 0 + orbitRadius * Math.sin(-angle);
 
-      controls.update();
+        if (followAsteroid) {
+          // Camera offset relative to the asteroid
+          const cameraOffset = new THREE.Vector3();
+          const targetPosition = asteroid.position.clone().add(cameraOffset);
+
+          // Smooth transition for camera position & look direction
+          camera.position.lerp(targetPosition, 0.1);
+          controls.target.lerp(asteroid.position, 0.1);
+          // camera.lookAt(asteroid.position);
+        }
+      }
+      
+      controls.update(); // Keep OrbitControls active
       renderer.render(scene, camera);
     }
 
     animate();
 
     // Handle window resizing
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     });
+
   });
 </script>
 </body>
