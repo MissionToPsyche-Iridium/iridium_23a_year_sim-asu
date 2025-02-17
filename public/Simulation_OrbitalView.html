@@ -164,7 +164,7 @@
 
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 5;
-    controls.maxDistance = 2500;
+    controls.maxDistance = 200;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -235,7 +235,7 @@
         console.log('Sun model loaded:', sunModel);
 
         sunModel.position.set(-330, 0, 0);
-        sunModel.scale.set(0.61, 0.61, 0.61);
+        sunModel.scale.set(0.62, 0.62, 0.62); //measured by psyche diameter divided by sun diameter, sun is 6194 times larger than psyche
 
         scene.add(sunModel);
       },
@@ -261,7 +261,7 @@
     };
 
     // Add the orbital path to the scene
-    const orbitRadius = 351;
+    const orbitRadius = 352;
     const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
     orbitPath.position.set(-290, 0, 0); // Match the sun's position
     scene.add(orbitPath);
@@ -284,8 +284,8 @@
         // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
         // circumference / the number of days it takes to orbit
 
-        // const orbitalSpeed = 0.0000001923; ACTUAL speed, keeping it at 0.01 for testing only
-        const orbitalSpeed = 0.01;
+        // const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
+        const orbitalSpeed = 0.001;
         const angle = performance.now() * 0.001 * orbitalSpeed;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-angle);
