@@ -53,6 +53,8 @@
     <input id="timeSlider" type="range" min="0" max="100" value="50" step="1">
     <label id="timeLabel">Time: 50</label>
     <button id="toggleRotation">Enable Auto-Rotate</button>
+    <input id="lightSlider" type="range" min="0" max="360" value="0" step="1">
+    <label id="lightLabel">Light Angle: 0°</label>
   </div>
   <div id="switch">
     <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
@@ -79,8 +81,11 @@
 
       // Add Directional Light for better shadow and directional effect
       const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-      directionalLight.position.set(-10, 10, 5);
+      let lightAngle = 0; // Light rotation angle in radians
+      let lightRadius = 1; // Distance from center
+      directionalLight.position.set(-lightRadius, lightRadius, 5);
       scene.add(directionalLight);
+
 
       // Set up camera and controls
       camera.position.set(0, 2, 5);
@@ -109,7 +114,7 @@
           asteroid = gltf.scene;
 
           //colors for temperature map
-          originalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.3 });
+          originalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.5 });
           tempMaterial = new THREE.MeshStandardMaterial({ vertexColors: true });
 
           // Adjust material to be a darker gray and respond to lighting
@@ -186,6 +191,21 @@
       const stars = new THREE.Points(starGeometry, starMaterial);
       scene.add(stars);
 
+      // Light slider event
+      const lightSlider = document.getElementById("lightSlider");
+      const lightLabel = document.getElementById("lightLabel");
+
+      lightSlider.addEventListener("input", () => {
+        lightAngle = lightSlider.value * (Math.PI / 180); 
+        lightLabel.textContent = `Light Angle: ${lightSlider.value}°`;
+
+        directionalLight.position.set(
+          Math.cos(lightAngle) * lightRadius,  
+          0,
+          -Math.sin(lightAngle) * lightRadius 
+        );
+        directionalLight.lookAt(asteroidGroup.position); 
+      });
 
       let autoRotate = false;
       let rotationSpeed = 0.002;
