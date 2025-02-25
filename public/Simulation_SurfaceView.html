@@ -50,8 +50,8 @@
     <button id="normalMode">Normal Mode</button>
     <button id="horizonMode">Horizon Mode</button>
     <button id="tempMap">Temperature Map</button>
-    <input id="timeSlider" type="range" min="0" max="100" value="50" step="1">
-    <label id="timeLabel">Time: 50</label>
+    <input id="axrotSlider" type="range" min="0" max="100" value="50" step="1">
+    <label id="axrotLabel">axrot: 50</label>
     <button id="toggleRotation">Enable Auto-Rotate</button>
     <input id="lightSlider" type="range" min="0" max="360" value="0" step="1">
     <label id="lightLabel">Light Angle: 0°</label>
@@ -176,7 +176,7 @@
       const starGeometry = new THREE.BufferGeometry();
       const starCount = 5000;
       const starVertices = [];
-      const time = 1;
+      const axrot = 1;
       const day_x = 0.0005;
       const day_y = 0.001;
 
@@ -209,20 +209,20 @@
 
       let autoRotate = false;
       let rotationSpeed = 0.002;
-      const timeSlider = document.getElementById("timeSlider");
-      const timeLabel = document.getElementById("timeLabel");
+      const axrotSlider = document.getElementById("axrotSlider");
+      const axrotLabel = document.getElementById("axrotLabel");
       const toggleRotationButton = document.getElementById("toggleRotation");
-      timeSlider.addEventListener("input", () => {
-        const timeValue = timeSlider.value;
-        timeLabel.textContent = `Time: ${timeValue}`;
+      axrotSlider.addEventListener("input", () => {
+        const axrotValue = axrotSlider.value;
+        axrotLabel.textContent = `axrot: ${axrotValue}`;
         if (asteroid) {
-          const rotationAngle = (timeValue / 100) * Math.PI * 2;
+          const rotationAngle = (axrotValue / 100) * Math.PI * 2;
           asteroid.rotation.z = rotationAngle;
         }
       });
       toggleRotationButton.addEventListener("click", () => {
         autoRotate = !autoRotate;
-        timeSlider.disabled = autoRotate;
+        axrotSlider.disabled = autoRotate;
         toggleRotationButton.textContent = autoRotate ? "Disable Auto-Rotate" : "Enable Auto-Rotate";
       });
 
