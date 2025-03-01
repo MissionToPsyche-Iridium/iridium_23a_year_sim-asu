@@ -222,17 +222,19 @@
         // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
         // circumference / the number of days it takes to orbit
 
-        //const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
-        const orbitalSpeed = 0.001;
+        const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
+        //const orbitalSpeed = 0.001;
         const elapsedTime = performance.now() * 0.001; // Convert ms to seconds
         const dynamicAngle = initialAngle + elapsedTime * orbitalSpeed;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
         asteroid.position.z = 0 + orbitRadius * Math.sin(-dynamicAngle);
 
-        asteroid.rotation.z += -0.0025;
+        // accurate axis
+        const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
+        const deltaTime = performance.now() * 0.001;
 
-        //asteroid.rotation.z += (-day_x*5) * time;
+        asteroid.rotation.z = deltaTime * psycheRotationSpeed;
 
         controls.update();
 
