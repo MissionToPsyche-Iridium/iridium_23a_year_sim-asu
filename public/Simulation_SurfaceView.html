@@ -50,8 +50,8 @@
     <button id="normalMode">Normal Mode</button>
     <button id="horizonMode">Horizon Mode</button>
     <button id="tempMap">Temperature Map</button>
-    <input id="axrotSlider" type="range" min="0" max="100" value="50" step="1">
-    <label id="axrotLabel">axrot: 50</label>
+    <input id="axrotSlider" type="range" min="0" max="100" value="0" step="1">
+    <label id="axrotLabel">axrot: 0</label>
     <button id="toggleRotation">Enable Auto-Rotate</button>
     <input id="lightSlider" type="range" min="0" max="360" value="0" step="1">
     <label id="lightLabel">Light Angle: 0°</label>
@@ -80,10 +80,14 @@
       scene.add(ambientLight);
 
       // Add Directional Light for better shadow and directional effect
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
       let lightAngle = 0; // Light rotation angle in radians
       let lightRadius = 1; // Distance from center
-      directionalLight.position.set(-lightRadius, lightRadius, 5);
+      directionalLight.position.set(
+        Math.cos(lightAngle) * lightRadius,  
+        0,
+        -Math.sin(lightAngle) * lightRadius
+      );
       scene.add(directionalLight);
 
 
@@ -205,6 +209,9 @@
           -Math.sin(lightAngle) * lightRadius 
         );
         directionalLight.lookAt(asteroidGroup.position); 
+        if (isTempMapActive) {
+          updateTemperatureMap();
+        }
       });
 
       let autoRotate = false;
@@ -226,6 +233,50 @@
         toggleRotationButton.textContent = autoRotate ? "Disable Auto-Rotate" : "Enable Auto-Rotate";
       });
 
+      function updateTemperatureMap() {
+        if (!asteroid) return;
+
+        asteroid.traverse((child) => {
+          if (child.isMesh && child.geometry) {
+            const geometry = child.geometry;
+            const normalAttribute = geometry.attributes.normal;
+            const positionAttribute = geometry.attributes.position;
+            const colors = [];
+
+            const worldMatrix = asteroid.matrixWorld.clone(); // Get world transformation matrix
+
+            for (let i = 0; i < normalAttribute.count; i++) {
+              // Convert normal into world space
+              const normal = new THREE.Vector3(
+                normalAttribute.getX(i),
+                normalAttribute.getY(i),
+                normalAttribute.getZ(i)
+              );
+              normal.applyMatrix3(new THREE.Matrix3().setFromMatrix4(worldMatrix)).normalize();
+
+              // Get light direction in world space (since the light remains fixed)
+              const lightDir = directionalLight.position.clone().normalize();
+
+              // Compute light intensity after rotation
+              const lightIntensity = Math.max(normal.dot(lightDir), 0);
+
+              // Map intensity to colors (blue = cold, red = hot)
+              const red = lightIntensity;
+              const blue = 1.0 - lightIntensity;
+              colors.push(red, 0, blue);
+            }
+
+            // Apply updated colors
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geometry.attributes.color.needsUpdate = true;
+          }
+        });
+      }
+
+
+
+
+
       // Viewing Modes
       document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
       document.getElementById('horizonMode').addEventListener('click', () => setState('horizon'));
@@ -239,7 +290,7 @@
         if (state === 'normal') {
           camera.position.set(0, 2, 5);
           controls.target.set(0, 0, 0);
-          controls.minDistance = 1.5;
+          controls.minDistance = 1.7;
           controls.maxDistance = 2.5;
           controls.enableRotate = true;
         } else if (state === 'horizon') {
