@@ -17,12 +17,14 @@
       gap: 10px; 
       z-index: 10;
     }
-    #switch {
+    #button-container {
       position: absolute;
       bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
+      display: flex;
+      gap: 10px; /* Space between buttons */
     }
     button {
       padding: 10px 20px;
@@ -56,8 +58,9 @@
     <input id="lightSlider" type="range" min="0" max="360" value="0" step="1">
     <label id="lightLabel">Light Angle: 0°</label>
   </div>
-  <div id="switch">
+  <div id="button-container">
     <button onclick="window.location.href='Simulation_OrbitalView.html'">Switch to Orbital View</button>
+    <button id="fullscreen-btn">Enter Fullscreen</button>
   </div>
 
   <!-- Import Three.js -->
@@ -67,7 +70,6 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-
       // Initialize the scene, camera, and renderer
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -75,21 +77,50 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.getElementById('container').appendChild(renderer.domElement);
 
+      // Fullscreen functionality
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().then(() => {
+            fullscreenBtn.textContent = 'Exit Fullscreen';
+          }).catch(err => {
+            console.error('Error attempting to enable fullscreen:', err);
+          });
+        } else {
+          document.exitFullscreen().then(() => {
+            fullscreenBtn.textContent = 'Enter Fullscreen';
+          }).catch(err => {
+            console.error('Error attempting to exit fullscreen:', err);
+          });
+        }
+      }
+
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+      // Listen for fullscreen changes to update button text
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+          fullscreenBtn.textContent = 'Enter Fullscreen';
+        } else {
+          fullscreenBtn.textContent = 'Exit Fullscreen';
+        }
+      });
+
       // Add Ambient Light
       const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
       scene.add(ambientLight);
 
       // Add Directional Light for better shadow and directional effect
       const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
-      let lightAngle = 0; // Light rotation angle in radians
-      let lightRadius = 1; // Distance from center
+      let lightAngle = 0;
+      let lightRadius = 1;
       directionalLight.position.set(
         Math.cos(lightAngle) * lightRadius,  
         0,
         -Math.sin(lightAngle) * lightRadius
       );
       scene.add(directionalLight);
-
 
       // Set up camera and controls
       camera.position.set(0, 2, 5);
@@ -137,34 +168,26 @@
                   normalAttribute.getZ(i)
                 ).normalize();
 
-                // Dot product to check how much light a vertex receives
                 const lightIntensity = Math.max(normal.dot(directionalLight.position.clone().normalize()), 0);
                 
-                // Interpolate color from cold (blue) to hot (red)
                 const red = lightIntensity;
                 const blue = 1.0 - lightIntensity;
-                colors.push(red, 0, blue);  // RGB format
+                colors.push(red, 0, blue);
               }
               geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             }
           });
 
-          // Compute the bounding box to center the asteroid
           const box = new THREE.Box3().setFromObject(asteroid);
           const center = box.getCenter(new THREE.Vector3());
-          asteroid.position.sub(center); 
+          asteroid.position.sub(center);
 
-          // Add the asteroid to the parent group
           asteroidGroup.add(asteroid);
 
-          // Set the OrbitControls target to the asteroid's group center
           controls.target.set(0, 0, 0);
           controls.update();
-        },
-      
+        }
       );
-
-      
 
       document.getElementById('tempMap').addEventListener('click', () => {
         if (asteroid) {
@@ -208,7 +231,7 @@
           0,
           -Math.sin(lightAngle) * lightRadius 
         );
-        directionalLight.lookAt(asteroidGroup.position); 
+        directionalLight.lookAt(asteroidGroup.position);
         if (isTempMapActive) {
           updateTemperatureMap();
         }
@@ -243,10 +266,9 @@
             const positionAttribute = geometry.attributes.position;
             const colors = [];
 
-            const worldMatrix = asteroid.matrixWorld.clone(); // Get world transformation matrix
+            const worldMatrix = asteroid.matrixWorld.clone();
 
             for (let i = 0; i < normalAttribute.count; i++) {
-              // Convert normal into world space
               const normal = new THREE.Vector3(
                 normalAttribute.getX(i),
                 normalAttribute.getY(i),
@@ -254,34 +276,24 @@
               );
               normal.applyMatrix3(new THREE.Matrix3().setFromMatrix4(worldMatrix)).normalize();
 
-              // Get light direction in world space (since the light remains fixed)
               const lightDir = directionalLight.position.clone().normalize();
-
-              // Compute light intensity after rotation
               const lightIntensity = Math.max(normal.dot(lightDir), 0);
 
-              // Map intensity to colors (blue = cold, red = hot)
               const red = lightIntensity;
               const blue = 1.0 - lightIntensity;
               colors.push(red, 0, blue);
             }
 
-            // Apply updated colors
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             geometry.attributes.color.needsUpdate = true;
           }
         });
       }
 
-
-
-
-
       // Viewing Modes
       document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
       document.getElementById('horizonMode').addEventListener('click', () => setState('horizon'));
 
-      // Set state management and other functions
       let currentState = 'normal';
 
       function setState(state) {
@@ -304,19 +316,16 @@
         controls.update();
       }
 
-      // Set default state
       setState('normal');
 
       // Animation loop
       function animate() {
         requestAnimationFrame(animate);
 
-        // Rotate the asteroid group if the asteroid is loaded
         if (autoRotate && asteroid) {
           asteroid.rotation.z -= rotationSpeed;
         }
 
-        // Render the scene
         controls.update();
         renderer.render(scene, camera);
       }
