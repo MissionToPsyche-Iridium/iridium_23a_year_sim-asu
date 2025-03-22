@@ -34,6 +34,25 @@
     button:active {
       transform: scale(1);
     }
+    #speed-control {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+    #speed-slider {
+      width: 300px;
+    }
+    #date-display {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: white;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -41,7 +60,7 @@
 <div id="button-container">
   <button id="fullscreen-btn">Enter Fullscreen</button>
 </div>
-
+  
 <!-- Import Three.js library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -49,6 +68,7 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+
     // Add scene
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000);
@@ -130,10 +150,12 @@
         // Compute the bounding box to center the asteroid
         const box = new THREE.Box3().setFromObject(asteroid);
         const center = box.getCenter(new THREE.Vector3());
-        asteroid.position.sub(center);
+        asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
 
+        // Add the asteroid to the parent group
         asteroidGroup.add(asteroid);
 
+        // Set the OrbitControls target to the asteroid's group center
         controls.target.set(0, 0, 0);
         controls.update();
       },
@@ -147,6 +169,10 @@
     const starGeometry = new THREE.BufferGeometry();
     const starCount = 5000;
     const starVertices = [];
+    const time = 1;
+    const day_x = 0.0005;
+    const day_y = 0.001;
+
     for (let i = 0; i < starCount; i++) {
       const x = (Math.random() - 0.5) * 5000;
       const y = (Math.random() - 0.5) * 5000;
@@ -160,14 +186,18 @@
 
     // Adding the sun using GLB model
     const loader2 = new THREE.GLTFLoader();
+
     let sunModel = null;
     loader2.load(
       './sun.glb',
       (gltf) => {
         sunModel = gltf.scene;
+
         console.log('Sun model loaded:', sunModel);
+
         sunModel.position.set(-330, 0, 0);
-        sunModel.scale.set(0.62, 0.62, 0.62);
+        sunModel.scale.set(0.155, 0.155, 0.155); //measured by psyche diameter divided by sun diameter, sun is 6194 times larger than psyche
+
         scene.add(sunModel);
       },
       undefined,
@@ -185,26 +215,44 @@
         transparent: true,
         opacity: 0.5,
       });
+
       const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
       orbit.rotation.x = Math.PI / 2;
       return orbit;
     };
 
+    // Add the orbital path to the scene
     const orbitRadius = 352;
     const orbitDays = 1830;
     const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
-    orbitPath.position.set(-290, 0, 0);
+    orbitPath.position.set(-290, 0, 0); // Match the sun's position
     scene.add(orbitPath);
 
     let followAsteroid = true;
 
+    // Calculate the asteroid's starting position based on a date
+
+    // my plan here is to split up the orbit into 1830 segments (it takes 1830 days to do a full orbit)
+    // ive yet to determine where and when the orbit actually starts and ends, and that will be an easy fix for when i *do* determine it
+    // as i can just change the startDate value
+    //
+    // but what's happening here is that i'm taking Jan 1 2020 as a reference date for when the orbit began
+    // since the value of current day will always be greater than the start date, it is easy to compute at which point of the orbit the
+    // asteroid is currently at using the math below
+    //
+    // the difference between today and the startDate is divided by the number of milliseconds in a day
+    // since the value of today - startDate is in milliseconds, dividing it by (1000 * 60 * 60 * 24) gives us the actual number of days
+    //
+    // actual num of days is then modulo'd by 1830 to find which day of the orbit we're in, and then the day/total days
+    // is mapped to a point in the orbit
+
     function getInitialAngle() {
-      const startDate = new Date(2020, 0, 1);
+      const startDate = new Date(2020, 0, 1); // random reference date
       const today = new Date();
-      const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-      const orbitSegment = daysElapsed % orbitDays;
-      return (orbitSegment / orbitDays) * (Math.PI * 2);
-    }
+      const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
+      const orbitSegment = daysElapsed % orbitDays; // get remainder within the 1830-day cycle
+      return (orbitSegment / orbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
+      }
 
     let initialAngle = getInitialAngle();
 
@@ -212,17 +260,33 @@
       requestAnimationFrame(animate);
 
       if (asteroid) {
-        console.log(`Asteroid Position: X=${asteroid.position.x}, Z=${asteroid.position.z}`);
-        const orbitalSpeed = 0.0000001923;
-        const elapsedTime = performance.now() * 0.001;
+
+        // the math is a little arbitrary
+        // psyche is 2.5 to 3.3 astronomical units away from the sun so i set the radius of the orbit as 351 
+        // (the sun is 61*61*61, and the average distance between the farthest and nearest points of psyche's distance from the sun is 290 (330+250/2))
+        // 
+        // the sun's position is set to -330, so it's not completely centered in the orbit radius
+        // this makes the furthest point between the sun and psyche 3.3 AUs, and the closest point 2.5 AUs, and the sun in between
+        // ensures the distance is accurate as its size is accounted for
+
+        // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
+        // circumference / the number of days it takes to orbit
+
+        // const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
+        const orbitalSpeed = 0.001;
+        const elapsedTime = performance.now() * 0.001; // Convert ms to seconds
         const dynamicAngle = initialAngle + elapsedTime * orbitalSpeed;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
         asteroid.position.z = 0 + orbitRadius * Math.sin(-dynamicAngle);
 
+        asteroid.rotation.y = dynamicAngle;
+
+        // accurate axis
         const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
         const deltaTime = performance.now() * 0.001;
-        asteroid.rotation.z = deltaTime * psycheRotationSpeed;
+
+        asteroid.rotation.z -= deltaTime * psycheRotationSpeed;
 
         controls.update();
 
@@ -246,6 +310,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     });
+
   });
 </script>
 </body>
