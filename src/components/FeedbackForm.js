@@ -9,8 +9,19 @@ const About = () => {
         <Helmet>
           <title>Feedback Form - Psyche Simulation</title>
         </Helmet>
-          <h2>This is the FEEDBACK FORM page</h2>
-          <p>Click on the above buttons or below links to be taken to a different page!</p>
+        <h2>Feedback Form</h2>
+        <p style={{ marginTop: '15px' }}>
+          Questions or comments?{' '}
+          <a 
+            href="https://psyche.asu.edu/contact/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ color: '#F3F3F4' }}
+          >
+            Click here
+          </a> 
+          {' '}to send them to the Psyche team!
+        </p>
       </main>
     </div>
   );

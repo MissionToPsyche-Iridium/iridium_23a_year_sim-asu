@@ -9,8 +9,19 @@ const About = () => {
         <Helmet>
           <title>Resource Links - Psyche Simulation</title>
         </Helmet>
-          <h2>This is the RESOURCE LINKS page</h2>
-          <p>Click on the above buttons or below links to be taken to a different page!</p>
+        <h2>Resource Links</h2>
+        <p style={{ marginTop: '15px' }}>
+          
+          <a
+            href="https://psyche.asu.edu/mission/faq/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#F3F3F4', textDecoration: 'underline' }}
+          >
+            Click here
+          </a>{' '}
+          to go to the Psyche Mission FAQ page and learn more about the mission.
+        </p>
       </main>
     </div>
   );
