@@ -76,6 +76,9 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
 
+    // Testing
+    
+
     // Fullscreen functionality
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     
@@ -121,11 +124,11 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
-    controls.enablePan = true;
+    controls.enablePan = false;
 
     // Limit how zoomed out and zoomed in orbital view can be
-    controls.minDistance = 5;
-    controls.maxDistance = 200;
+    controls.minDistance = 10;
+    controls.maxDistance = 50;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -213,7 +216,7 @@
         color: color,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.2,
       });
 
       const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
@@ -273,29 +276,36 @@
         // circumference / the number of days it takes to orbit
 
         // const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
-        const orbitalSpeed = 0.001;
+        const orbitalSpeed = 0.1;
         const elapsedTime = performance.now() * 0.001; // Convert ms to seconds
         const dynamicAngle = initialAngle + elapsedTime * orbitalSpeed;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
         asteroid.position.z = 0 + orbitRadius * Math.sin(-dynamicAngle);
 
-        asteroid.rotation.y = dynamicAngle;
+        //asteroid.rotation.y = dynamicAngle;
 
         // accurate axis
         const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
-        const deltaTime = performance.now() * 0.001;
+        const deltaTime = performance.now() * -1;
 
-        asteroid.rotation.z -= deltaTime * psycheRotationSpeed;
+        asteroid.rotation.z = deltaTime * psycheRotationSpeed;
 
         controls.update();
 
         if (followAsteroid) {
-          const cameraOffset = new THREE.Vector3();
-          const targetPosition = asteroid.position.clone().add(cameraOffset);
-          camera.position.lerp(targetPosition, 0);
-          controls.target.lerp(asteroid.position, 0.1);
+          // Calculate the delta between the current target and asteroid's new position
+          const previousTarget = controls.target.clone();
+          const newTarget = asteroid.position.clone();
+          const targetDelta = newTarget.clone().sub(previousTarget);
+
+          // Move the camera by the same delta
+          camera.position.add(targetDelta);
+
+          // Update the control target to the asteroid
+          controls.target.copy(newTarget);
         }
+
       }
       
       controls.update();
