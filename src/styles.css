@@ -196,29 +196,33 @@
         .button-group { 
             margin-right: 1.5rem;
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* <-- changed from column to row */
+            gap: 1rem;           /* <-- adds the space between buttons */
+            margin-right: 1.5rem;
         }
 
-        .button-group button { 
-            background-color: transparent;
+        .button-group button {
+            background-color: transparent; /* Plain text by default */
             color: white;
             border: none;
             padding: 10px 20px;
             font-size: calc(1rem + 0.5vw);
             cursor: pointer;
-            border-radius: 4px;
-            margin-bottom: 1rem; 
-            transition: background-color 0.3s; 
-        }
-
-        /* Add hover effect for the sim view controller buttons */
-        .button-group button:hover { 
-            color: #f9a000;
-            transform: scale(1.1); 
-        }
-
-        /* Active buttons for sim view controller buttons */
-        .button-active { color: #f47c33 !important; /* Change button color when pressed */ }
+            border-radius: 12px;
+            transition: background-color 0.3s, transform 0.3s ease-in-out; /* Updated to match header buttons */
+            text-align: center;
+          }
+          
+          .button-group button:hover {
+            background-color: #f9a000;
+            transform: scale(1.1); /* Match header button hover effect */
+          }
+          
+          .button-active {
+            background-color: #f47c33 !important;
+            color: white !important;
+            border-radius: 12px;
+          }
 
         /* Styling for simulation placeholder */
         .simulation-placeholder { 
