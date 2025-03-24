@@ -34,6 +34,12 @@
     #fullscreen-btn:active {
         transform: scale(0.95);
     }
+    #fullscreen-icon {
+        width: 30px;   /* change to 32px, 40px, etc. if you want larger */
+        height: 30px;
+        display: block;
+        pointer-events: none;
+    }
     #date-display {
       position: absolute;
       font-family: 'Lato', monospace;
@@ -53,10 +59,7 @@
 
 <div id="container"></div>
 <button id="fullscreen-btn" title="Toggle Fullscreen">
-  <svg id="fullscreen-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z" 
-          fill="white"/>
-  </svg>
+  <img id="fullscreen-icon" src="fullscreen_24dp_E3E3E3.png" alt="Fullscreen Icon">
 </button>
   
 <!-- Import Three.js library -->
@@ -96,33 +99,34 @@
 
     // Fullscreen functionality
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const fullscreenIcon = document.getElementById('fullscreen-icon').querySelector('path');
+        const fullscreenIcon = document.getElementById('fullscreen-icon');
 
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().then(() => {
-                fullscreenIcon.setAttribute('d', 'M6 6h12v12H6z');  // Fullscreen icon
+              fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
             }).catch(err => {
-                console.error('Error attempting to enable fullscreen:', err);
+              console.error("Error attempting to enable fullscreen:", err);
             });
-        } else {
+          } else {
             document.exitFullscreen().then(() => {
-                fullscreenIcon.setAttribute('d', 'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z');  // Exit fullscreen icon
+              fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
             }).catch(err => {
-                console.error('Error attempting to exit fullscreen:', err);
+              console.error("Error attempting to exit fullscreen:", err);
             });
+          }
         }
-    }
 
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
-            fullscreenIcon.setAttribute('d', 'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z');
-        } else {
-            fullscreenIcon.setAttribute('d', 'M6 6h12v12H6z');
-        }
-    });
+        // Also update icon if user exits fullscreen some other way
+        document.addEventListener('fullscreenchange', () => {
+          if (document.fullscreenElement) {
+            fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
+          } else {
+            fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
+          }
+        });
 
 
     // Ambient light
