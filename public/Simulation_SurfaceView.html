@@ -82,6 +82,34 @@
         transform: scale(1);
         box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
       }
+
+      #fullscreen-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 10;
+        background: #DB371F;
+        color: #f3f3f4;
+        border: none;
+        border-radius: 5px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+      #fullscreen-btn:hover {
+          background-color: #9d2715;
+          transform: scale(1.1);
+      }
+
+      #fullscreen-btn:active {
+          transform: scale(0.95);
+      }
     </style>
   </head>
   <body>
@@ -113,9 +141,13 @@
         <label id="lightLabel">Earth Days: 0</label>
       </div>
     </div>
-    <div id="button-container">
-      <button id="fullscreen-btn">Enter Fullscreen</button>
-    </div>
+    <div id="button-container"></div>
+    <button id="fullscreen-btn" title="Toggle Fullscreen">
+      <svg id="fullscreen-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path id="enter-icon" d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z" fill="white"/>
+        <path id="exit-icon" d="M6 6h12v12H6z" fill="white" style="display: none;"/>
+      </svg>
+    </button>    
 
     <!-- Import Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -173,31 +205,32 @@
 
         // Fullscreen functionality
         const fullscreenBtn = document.getElementById('fullscreen-btn');
-        
+        const enterIcon = document.getElementById('enter-icon');
+        const exitIcon = document.getElementById('exit-icon');
+
         function toggleFullscreen() {
           if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().then(() => {
-              fullscreenBtn.textContent = 'Exit Fullscreen';
-            }).catch(err => {
-              console.error('Error attempting to enable fullscreen:', err);
+              enterIcon.style.display = 'none';
+              exitIcon.style.display = 'inline';
             });
           } else {
             document.exitFullscreen().then(() => {
-              fullscreenBtn.textContent = 'Enter Fullscreen';
-            }).catch(err => {
-              console.error('Error attempting to exit fullscreen:', err);
+              exitIcon.style.display = 'none';
+              enterIcon.style.display = 'inline';
             });
           }
         }
 
         fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-        // Listen for fullscreen changes to update button text
         document.addEventListener('fullscreenchange', () => {
           if (!document.fullscreenElement) {
-            fullscreenBtn.textContent = 'Enter Fullscreen';
+            exitIcon.style.display = 'none';
+            enterIcon.style.display = 'inline';
           } else {
-            fullscreenBtn.textContent = 'Exit Fullscreen';
+            enterIcon.style.display = 'none';
+            exitIcon.style.display = 'inline';
           }
         });
 

@@ -7,47 +7,40 @@
   <style>
     body { margin: 0; overflow: hidden; }
     #container { width: 100vw; height: 100vh; }
-    #button-container {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      gap: 10px; /* Space between buttons */
+
+    #fullscreen-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 10;
+        background: #DB371F;
+        color: #f3f3f4;
+        border: none;
+        border-radius: 5px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: #DB371F;
-      color: #f3f3f4;
-      border: none;
-      border-radius: 5px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: background-color 0.3s, transform 0.2s;
+    #fullscreen-btn:hover {
+        background-color: #9d2715;
+        transform: scale(1.1);
     }
-    button:hover {
-      background-color: #9d2715;
-      transform: scale(1.05);
-    }
-    button:active {
-      transform: scale(1);
-    }
-    #speed-control {
-      position: absolute;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-    }
-    #speed-slider {
-      width: 300px;
+
+    #fullscreen-btn:active {
+        transform: scale(0.95);
     }
     #date-display {
       position: absolute;
+      font-family: 'Lato', monospace;
       top: 10px;
       left: 50%;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.5);
       transform: translateX(-50%);
       font-size: 24px;
       color: white;
@@ -56,10 +49,15 @@
   </style>
 </head>
 <body>
+<div id="date-display"></div>
+
 <div id="container"></div>
-<div id="button-container">
-  <button id="fullscreen-btn">Enter Fullscreen</button>
-</div>
+<button id="fullscreen-btn" title="Toggle Fullscreen">
+  <svg id="fullscreen-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z" 
+          fill="white"/>
+  </svg>
+</button>
   
 <!-- Import Three.js library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -69,6 +67,26 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
 
+      // Date and time display function
+      function updateDateTime() {
+      const dateDisplay = document.getElementById('date-display');
+      const now = new Date();
+
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = now.toLocaleString('default', { month: 'long' }).toUpperCase();
+      const year = now.getFullYear();
+      
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      dateDisplay.innerHTML = `${day} ${month} ${year}<br>${hours}:${minutes}:${seconds}`;
+    }
+
+    // Update the date and time every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
     // Add scene
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000);
@@ -76,38 +94,36 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
 
-    // Testing
-    
-
     // Fullscreen functionality
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    
+    const fullscreenIcon = document.getElementById('fullscreen-icon').querySelector('path');
+
     function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
-          fullscreenBtn.textContent = 'Exit Fullscreen';
-        }).catch(err => {
-          console.error('Error attempting to enable fullscreen:', err);
-        });
-      } else {
-        document.exitFullscreen().then(() => {
-          fullscreenBtn.textContent = 'Enter Fullscreen';
-        }).catch(err => {
-          console.error('Error attempting to exit fullscreen:', err);
-        });
-      }
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().then(() => {
+                fullscreenIcon.setAttribute('d', 'M6 6h12v12H6z');  // Fullscreen icon
+            }).catch(err => {
+                console.error('Error attempting to enable fullscreen:', err);
+            });
+        } else {
+            document.exitFullscreen().then(() => {
+                fullscreenIcon.setAttribute('d', 'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z');  // Exit fullscreen icon
+            }).catch(err => {
+                console.error('Error attempting to exit fullscreen:', err);
+            });
+        }
     }
 
     fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-    // Listen for fullscreen changes to update button text
     document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement) {
-        fullscreenBtn.textContent = 'Enter Fullscreen';
-      } else {
-        fullscreenBtn.textContent = 'Exit Fullscreen';
-      }
+        if (!document.fullscreenElement) {
+            fullscreenIcon.setAttribute('d', 'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z');
+        } else {
+            fullscreenIcon.setAttribute('d', 'M6 6h12v12H6z');
+        }
     });
+
 
     // Ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
@@ -115,6 +131,10 @@
     const pointLight = new THREE.PointLight(0xffffff, 1.5);
     pointLight.position.set(-10, 10, 5);
     scene.add(pointLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.1);
+    directionalLight.position.set(-330, 0, 0);
+    scene.add(directionalLight);
 
     // Set camera center
     camera.position.z = 0;
@@ -128,7 +148,7 @@
 
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 10;
-    controls.maxDistance = 50;
+    controls.maxDistance = 2000;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -211,7 +231,7 @@
 
     // Create the orbital path
     const createOrbitalPath = (radius, color = 0xffffff) => {
-      const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 64);
+      const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 1024);
       const orbitMaterial = new THREE.MeshBasicMaterial({
         color: color,
         side: THREE.DoubleSide,
@@ -225,13 +245,23 @@
     };
 
     // Add the orbital path to the scene
-    const orbitRadius = 352;
+    const orbitRadius = 352.5;
     const orbitDays = 1830;
     const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
     orbitPath.position.set(-290, 0, 0); // Match the sun's position
     scene.add(orbitPath);
 
     let followAsteroid = true;
+
+    function updateLighting() {
+      if (!asteroid || !sunModel) return;
+
+      const sunPos = sunModel.position.clone();
+      const asteroidPos = asteroid.position.clone();
+
+      const lightDirection = new THREE.Vector3().subVectors(sunPos, asteroidPos).normalize();
+      directionalLight.position.copy(lightDirection.multiplyScalar(orbitRadius * 1.2));
+    }
 
     // Calculate the asteroid's starting position based on a date
 
@@ -249,7 +279,7 @@
     // actual num of days is then modulo'd by 1830 to find which day of the orbit we're in, and then the day/total days
     // is mapped to a point in the orbit
 
-    function getInitialAngle() {
+    function getInitialPosition() {
       const startDate = new Date(2020, 0, 1); // random reference date
       const today = new Date();
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
@@ -257,7 +287,19 @@
       return (orbitSegment / orbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
       }
 
-    let initialAngle = getInitialAngle();
+    let initialPosition = getInitialPosition();
+
+    function getInitialAngle() {
+      const startDate = new Date(2020, 0, 1); // reference date
+      const now = new Date();
+      const msElapsed = now - startDate;
+
+      const hoursElapsed = msElapsed / (1000 * 60 * 60);
+      const rotationsElapsed = hoursElapsed / 4.2;
+      const initialAngle = (rotationsElapsed % 1) * (Math.PI * 2); // map to 0 - 2pi range
+
+      return initialAngle;
+    }
 
     function animate() {
       requestAnimationFrame(animate);
@@ -275,10 +317,10 @@
         // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
         // circumference / the number of days it takes to orbit
 
-        // const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
-        const orbitalSpeed = 0.1;
+        const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
+        //const orbitalSpeed = 0.1;
         const elapsedTime = performance.now() * 0.001; // Convert ms to seconds
-        const dynamicAngle = initialAngle + elapsedTime * orbitalSpeed;
+        const dynamicAngle = initialPosition + elapsedTime * orbitalSpeed;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
         asteroid.position.z = 0 + orbitRadius * Math.sin(-dynamicAngle);
@@ -287,9 +329,10 @@
 
         // accurate axis
         const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
-        const deltaTime = performance.now() * -1;
+        const deltaTime = performance.now() * -0.001;
 
-        asteroid.rotation.z = deltaTime * psycheRotationSpeed;
+        const initialAngle = getInitialAngle();
+        asteroid.rotation.z = initialAngle + deltaTime * psycheRotationSpeed;
 
         controls.update();
 
