@@ -30,12 +30,12 @@
         }
 
         header { 
-            background-color: transparent;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 1rem;
-            justify-content: space-between; 
-        }
+            position: relative;
+          }
 
         header img { 
             height: auto; width: 150px; 
@@ -44,10 +44,12 @@
 
         /* Style for the header buttons */
         .header-buttons {
-            display: flex; 
-            justify-content: space-around; 
-            flex: 1; 
-        }
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2rem;
+          }
 
         .header-button {
             font-size: calc(1.8rem + 0.5vw); 
