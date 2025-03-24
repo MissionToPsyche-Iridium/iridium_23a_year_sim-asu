@@ -38,8 +38,8 @@ const Home = () => {
         <div className="text-container-wrapper">
           <h3 className="text-container-header">
             {iframeSrc === 'Simulation_OrbitalView.html'
-              ? 'Fun Facts: Orbital View'
-              : 'Fun Facts: Surface View'}
+              ? 'Psyche: Orbital View'
+              : 'Psyche: Surface View'}
           </h3>
           <div className="scrollable-text-box">
             {iframeSrc === 'Simulation_OrbitalView.html' ? (
