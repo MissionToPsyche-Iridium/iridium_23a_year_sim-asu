@@ -44,18 +44,74 @@
       button:active {
         transform: scale(1);
       }
+      #ui-left, #ui-right {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 10;
+      }
+
+      #ui-left {
+        left: 10px;
+      }
+
+      #ui-right {
+        right: 10px;
+      }
+      .slider-box {
+        background-color: rgba(0, 0, 0, 0.5); /* black with transparency */
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+      }
+      .slider-box label {
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+      }
+      button.selected {
+        background-color: #9d2715 !important;
+        transform: scale(1);
+        box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+      }
     </style>
   </head>
   <body>
-    <div id="container"></div>
-    <div id="ui">
-      <button id="normalMode">Normal Mode</button>
-      <button id="horizonMode">Horizon Mode</button>
+    <div id="container"></div> <!-- This is needed for the WebGL renderer -->
+    <div id="label" style="
+      position: absolute;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      pointer-events: none;
+      display: none;
+      z-index: 20;
+    "></div>
+        <div id="ui-left">
+      <button id="normalMode">Reset Camera</button>
       <button id="tempMap">Temperature Map</button>
-      <input id="axrotSlider" type="range" min="0" max="100" value="0" step="1">
-      <label id="axrotLabel">axrot: 0</label> 
-      <input id="lightSlider" type="range" min="0" max="360" value="0" step="1">
-      <label id="lightLabel">Light Angle: 0°</label>
+
+    </div>
+
+    <div id="ui-right">
+
+      <div class="slider-box">
+        <input id="axrotSlider" type="range" min="0" max="252" value="0" step="1">
+        <label id="axrotLabel">Time: 0h 0m</label>
+        <input id="lightSlider" type="range" min="0" max="1828" value="0" step="1">
+        <label id="lightLabel">Earth Days: 0</label>
+      </div>
     </div>
     <div id="button-container">
       <button id="fullscreen-btn">Enter Fullscreen</button>
@@ -67,13 +123,53 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
     <script>
+      
       document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById('container');
+        if (!container) {
+          console.error("Container not found!");
+          return;
+        }
         // Initialize the scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('container').appendChild(renderer.domElement);
+
+        // Create a group to hold the line and ticks
+        const measureGroup = new THREE.Group();
+
+        // Create measurement line
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const points = [
+          new THREE.Vector3(-1, 0, 1.05),
+          new THREE.Vector3(1, 0, 1.05)
+        ];
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(lineGeometry, lineMaterial);
+        measureGroup.add(line);
+
+        // Tick marks
+        const tickMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const tickLength = 0.2;
+
+        const tickLeftGeometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-1, -tickLength / 2, 1.05),
+          new THREE.Vector3(-1, tickLength / 2, 1.05)
+        ]);
+        const tickRightGeometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(1, -tickLength / 2, 1.05),
+          new THREE.Vector3(1, tickLength / 2, 1.05)
+        ]);
+
+        const tickLeft = new THREE.Line(tickLeftGeometry, tickMaterial);
+        const tickRight = new THREE.Line(tickRightGeometry, tickMaterial);
+        measureGroup.add(tickLeft);
+        measureGroup.add(tickRight);
+
+        // Add the group to the scene
+        scene.add(measureGroup);
 
         // Fullscreen functionality
         const fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -187,14 +283,23 @@
           }
         );
 
-        document.getElementById('tempMap').addEventListener('click', () => {
+        const tempMapBtn = document.getElementById('tempMap');
+        tempMapBtn.addEventListener('click', () => {
           if (asteroid) {
             isTempMapActive = !isTempMapActive;
+
             asteroid.traverse((child) => {
               if (child.isMesh) {
                 child.material = isTempMapActive ? tempMaterial : originalMaterial;
               }
             });
+
+            // Add/remove 'selected' class to button
+            if (isTempMapActive) {
+              tempMapBtn.classList.add('selected');
+            } else {
+              tempMapBtn.classList.remove('selected');
+            }
           }
         });
 
@@ -221,41 +326,47 @@
         const lightLabel = document.getElementById("lightLabel");
 
         lightSlider.addEventListener("input", () => {
-          lightAngle = lightSlider.value * (Math.PI / 180); 
-          lightLabel.textContent = `Light Angle: ${lightSlider.value}°`;
+          const days = parseInt(lightSlider.value);
+          lightLabel.textContent = `Earth Days: ${days}`;
+
+          // Map 0–1828 days to 0–360 degrees (2π radians)
+          lightAngle = (days / 1828) * Math.PI * 2;
 
           directionalLight.position.set(
-            Math.cos(lightAngle) * lightRadius,  
+            Math.cos(lightAngle) * lightRadius,
             0,
-            -Math.sin(lightAngle) * lightRadius 
+            -Math.sin(lightAngle) * lightRadius
           );
+
           directionalLight.lookAt(asteroidGroup.position);
-          if (isTempMapActive) {
-            updateTemperatureMap();
-          }
         });
 
         function updateTemperatureMap() {
           if (!asteroid) return;
+
+          const lightDirWorld = new THREE.Vector3(
+            Math.cos(lightAngle),
+            0,
+            -Math.sin(lightAngle)
+          ).normalize();
+
           asteroid.traverse((child) => {
             if (child.isMesh && child.geometry) {
               const geometry = child.geometry;
               const normalAttribute = geometry.attributes.normal;
               const colors = [];
 
-              const lightDir = new THREE.Vector3(
-                Math.cos(lightAngle), -Math.sin(lightAngle), 0
-              ).normalize();
+              const normalMatrix = new THREE.Matrix3().getNormalMatrix(child.matrixWorld); // transforms normal to world space
 
               for (let i = 0; i < normalAttribute.count; i++) {
                 const normal = new THREE.Vector3(
                   normalAttribute.getX(i),
                   normalAttribute.getY(i),
                   normalAttribute.getZ(i)
-                ).normalize();
+                ).applyMatrix3(normalMatrix).normalize(); // now it's in world space
 
-                let lightIntensity = Math.max(normal.dot(lightDir), 0);
-                lightIntensity = Math.pow(lightIntensity, 2.0);
+                let lightIntensity = Math.max(normal.dot(lightDirWorld), 0);
+                lightIntensity = Math.pow(lightIntensity, 2.0); // optional contrast boost
                 colors.push(lightIntensity * 2, 0, 2.0 - lightIntensity * 2);
               }
 
@@ -271,19 +382,25 @@
         const axrotLabel = document.getElementById("axrotLabel");
         const toggleRotationButton = document.getElementById("toggleRotation");
         axrotSlider.addEventListener("input", () => {
-          const axrotValue = axrotSlider.value;
-          axrotLabel.textContent = `axrot: ${axrotValue}`;
+          const minutes = parseInt(axrotSlider.value);
+          const hours = Math.floor(minutes / 60);
+          const remainingMinutes = minutes % 60;
+
+          axrotLabel.textContent = `Time: ${hours}h ${remainingMinutes}m`;
+
           if (asteroid) {
-            const rotationAngle = -(axrotValue / 100) * Math.PI * 2;
+            // Convert full 252 min range to 360° rotation
+            const rotationAngle = -(minutes / 252) * Math.PI * 2;
             asteroid.rotation.z = rotationAngle;
+            measureGroup.rotation.z = rotationAngle;  // sync the line too
           }
+          
         });
         
 
 
         // Viewing Modes
         document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
-        document.getElementById('horizonMode').addEventListener('click', () => setState('horizon'));
 
         let currentState = 'normal';
 
@@ -297,24 +414,36 @@
             controls.maxDistance = 2.5;
             controls.enableRotate = true;
           }
-           else if (state === 'horizon') {
-            camera.position.set(0, 1.1, 3);
-            controls.target.set(0, 1.1, 0);
-            controls.minDistance = 1.1;
-            controls.maxDistance = 1.1;
-            controls.enableRotate = false;
-          }
-
           controls.update();
         }
 
         setState('normal');
 
+        const label = document.getElementById('label');
+
+        function updateLabelPosition() {
+          const start = measureGroup.children[0].geometry.attributes.position;
+          const p0 = new THREE.Vector3().fromBufferAttribute(start, 0).applyMatrix4(measureGroup.matrixWorld);
+          const p1 = new THREE.Vector3().fromBufferAttribute(start, 1).applyMatrix4(measureGroup.matrixWorld);
+          const midpoint = new THREE.Vector3().addVectors(p0, p1).multiplyScalar(0.5);
+
+          const projected = midpoint.clone().project(camera);
+          const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+
+          label.style.left = `${x}px`;
+          label.style.top = `${y}px`;
+          label.textContent = "280 km / 178 miles";  // Placeholder text
+          label.style.display = "block";
+        }
+
         // Animation loop
         function animate() {
           requestAnimationFrame(animate);
-
-
+          if (isTempMapActive) {
+            updateTemperatureMap(); // Now it updates every frame
+          }
+          updateLabelPosition();  // <-- Add this
           controls.update();
           renderer.render(scene, camera);
         }
@@ -330,4 +459,4 @@
       });
     </script>
   </body>
-</html>
+</html> 
