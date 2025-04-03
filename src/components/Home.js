@@ -44,45 +44,43 @@ const Home = () => {
           <div className="scrollable-text-box">
             {iframeSrc === 'Simulation_OrbitalView.html' ? (
               <>
-                <p>
-                  filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                </p>
-                <p>
-                  filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                </p>
-                <p>
-                  filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                </p>
+                <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', margin: 0 }}>
+                  <li>
+                    The white line hovering over Psyche shows its widest stretch — about <strong>173 miles across</strong>.
+                  </li>
+                  <br />
+                  <li>
+                    Use the <strong>first slider</strong> to watch Psyche complete one full spin. A Psyche day is only <strong>4 hours and 12 minutes</strong> long.
+                  </li>
+                  <br />
+                  <li>
+                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1828 Earth days</strong>.
+                  </li>
+                  <br />
+                  <li>
+                    Click the <strong>"Temperature Map"</strong> button to see how sunlight heats different parts of Psyche as it rotates and orbits.
+                  </li>
+                </ul>
               </>
             ) : (
               <>
-                <p>
-                  filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                </p>
-                <p>
-                  filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                </p>
-                <p>
-                  filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                  filler filler filler filler filler filler filler filler filler filler filler filler 
-                </p>
+                <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', margin: 0 }}>
+                  <li>
+                    The white line hovering over Psyche shows its widest stretch — about <strong>173 miles across</strong>.
+                  </li>
+                  <br />
+                  <li>
+                    Use the <strong>first slider</strong> to watch Psyche complete one full spin. A Psyche day is only <strong>4 hours and 12 minutes</strong> long.
+                  </li>
+                  <br />
+                  <li>
+                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1828 Earth days</strong>.
+                  </li>
+                  <br />
+                  <li>
+                    Click the <strong>"Temperature Map"</strong> button to see how sunlight heats different parts of Psyche as it rotates and orbits.
+                  </li>
+                </ul>
               </>
             )}
           </div>
