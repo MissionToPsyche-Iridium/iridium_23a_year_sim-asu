@@ -20,16 +20,7 @@ const BottomRightLinks = () => {
         </NavLink>
 
 
-      {/* Social Media Icons */}
-      <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/email.png" alt="Email" className="image-button" />
-      </a>
-      <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/whatsapp.png" alt="WhatsApp" className="image-button" />
-      </a>
-      <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer">
-        <img src="/assets/linkedin.png" alt="LinkedIn" className="image-button" />
-      </a>
+      
     </div>
   );
 };

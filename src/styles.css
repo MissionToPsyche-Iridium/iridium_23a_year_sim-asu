@@ -132,8 +132,8 @@
         /* Style for the bottom right links */
         .bottom-right-links { 
             display: flex; position: absolute; 
-            right: 20px; 
-            bottom: 60px; 
+            right: 60px; 
+            bottom: 40px; 
             align-items: flex-end;
         }
 
