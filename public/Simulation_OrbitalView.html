@@ -16,11 +16,13 @@
       z-index: 10;
       display: flex;
       align-items: center;
+      flex-direction: row;
       gap: 10px;
       padding: 10px;
       border-radius: 8px;
       color: white;
       font-family: 'Lato', monospace;
+      flex-wrap: wrap;
     }
 
     #speed-slider {
@@ -28,31 +30,12 @@
       font-family: 'Lato', monospace;
     }
 
-    #reset-btn {
-      position: fixed;
-      bottom: -10px;
-      left: -215px;
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      height: 40px;
-      cursor: pointer;
-      transition: background 0.3s;
-      font-family: 'Lato', monospace;
-    }
-
-    #reset-btn:hover {
-      background: #218838;
-    }
-
     #fullscreen-btn {
         position: absolute;
         bottom: 10px;
         right: 10px;
         z-index: 10;
-        background: #DB371F;
+        background: #0000;
         color: #f3f3f4;
         border: none;
         border-radius: 5px;
@@ -66,7 +49,7 @@
         transition: background-color 0.3s, transform 0.2s;
     }
     #fullscreen-btn:hover {
-        background-color: #9d2715;
+        background-color: #0000;
         transform: scale(1.1);
     }
 
@@ -91,16 +74,81 @@
       color: white;
       z-index: 10;
     }
+    #speed-display {
+      position: absolute;
+      font-family: 'Lato', monospace;
+      bottom: 80px;
+      left: 50%;
+      text-align: center;
+      transform: translateX(-50%);
+      font-size: 18px;
+      color: white;
+      z-index: 10;
+    }
+    #playback-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+    }
+    #playback-icon {
+        width: 15px;   /* change to 32px, 40px, etc. if you want larger */
+        height: 15px;
+        bottom: 10px;
+        display: block;
+        pointer-events: none;
+      }
+    #ui-wrapper {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .circle-btn {
+      background: #0000;
+      color: #f3f3f4;
+      border: none;
+      border-radius: 5px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .circle-btn:hover {
+      background-color: #0000;
+      transform: scale(1.1);
+    }
+    .circle-btn:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
-<div id="date-display"></div>
 <div id="container"></div>
-<div id="controls">
-  <input id="speed-slider" type="range" min="0" max="26" step="1" value="13">
-  <br>SPEED<br>
-  <button id="reset-btn">Reset Position</button>
+<div id="date-display"></div>
+<div id="speed-display"></div>
+<div id="ui-wrapper">
+  <div id="controls">
+    <input id="speed-slider" type="range" min="0" max="26" step="1" value="13">
+  </div>
+  <div id="playback-buttons">
+    <button id="slow-down-btn" class="circle-btn"><img id="playback-icon" src="fast-rewind-1-128.png"></button>
+    <button id="pause-btn" class="circle-btn"><img id="playback-icon" src="icon-pause-128.png"></button>
+    <button id="play-btn" class="circle-btn"><img id="playback-icon" src="play-button-6-128.png"></button>
+    <button id="reset-btn" class="circle-btn"><img id="playback-icon" src="reset-40-128.png"></button>
+    <button id="speed-up-btn" class="circle-btn"><img id="playback-icon" src="fast-forward-9-128.png"></button>
+  </div>
 </div>
+
 <button id="fullscreen-btn" title="Toggle Fullscreen">
   <img id="fullscreen-icon" src="fullscreen_24dp_E3E3E3.png" alt="Fullscreen Icon">
 </button>
@@ -161,6 +209,17 @@
       60 * 60 * 24 * 365,     // +1 year
     ];
 
+    function getSpeedLabel(index) {
+      const speedLabels = [
+        "-1 YEAR", "-9 MONTHS", "-6 MONTHS", "-3 MONTHS", "-1 MONTH",
+        "-2 WEEKS", "-1 WEEK", "-1 DAY", "-12 HOURS", "-1 HOUR", "-10 MINUTES", "-5 MINUTES", "-1 MINUTE",
+        "0", 
+        "+1 MINUTE", "+5 MINUTES", "+10 MINUTES", "+1 HOUR", "+12 HOURS", "+1 DAY", 
+        "+1 WEEK", "+2 WEEKS", "+1 MONTH", "+3 MONTHS", "+6 MONTHS", "+9 MONTHS", "+1 YEAR"
+      ];
+      return speedLabels[index];
+    }
+
     function updateSimulatedDate() {
       const now = new Date();
       let simDate;
@@ -184,6 +243,69 @@
 
     updateDateTime();
     setInterval(updateDateTime, 1000);
+
+    // Add play/pause state variables
+    let isPlaying = false;
+    let lastSpeedIndex = 13; // Store the last speed before pausing
+
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const slowDownBtn = document.getElementById('slow-down-btn');
+    const speedUpBtn = document.getElementById('speed-up-btn');
+
+    // Play button functionality
+    playBtn.addEventListener('click', () => {
+      if (!isPlaying) {
+        if (speedMultiplier === 0 && lastSpeedIndex !== 13) {
+          speedSlider.value = lastSpeedIndex;
+          speedMultiplier = speedOptions[lastSpeedIndex];
+        } else if (speedMultiplier === 0) {
+          // If no last speed, default to +1 minute
+          speedSlider.value = 14; // +1 minute index
+          speedMultiplier = speedOptions[14];
+        }
+        isPlaying = true;
+      }
+    });
+
+    // Pause button functionality
+    pauseBtn.addEventListener('click', () => {
+      if (speedMultiplier !== 0) {
+        lastSpeedIndex = speedSlider.value; // Store current speed before pausing
+      }
+      speedMultiplier = 0;
+      isPlaying = false;
+    });
+
+    // Slow down button functionality
+    slowDownBtn.addEventListener('click', () => {
+      if (speedIndex > 0) {
+        speedIndex--;
+        speedSlider.value = speedIndex;
+        speedMultiplier = speedOptions[speedIndex];
+        isPlaying = true;
+        updateSpeedDisplay();
+      }
+    });
+
+    // Speed up button functionality
+    speedUpBtn.addEventListener('click', () => {
+      if (speedIndex < speedOptions.length - 1) {
+        speedIndex++;
+        speedSlider.value = speedIndex;
+        speedMultiplier = speedOptions[speedIndex];
+        isPlaying = true;
+        updateSpeedDisplay();
+      }
+    });
+
+    function updateSpeedDisplay() {
+      if (speedIndex === 13) {
+        speedDisplay.textContent = "";
+      } else {
+        speedDisplay.textContent = getSpeedLabel(speedIndex);
+      }
+    }
 
     // Add scene
     const scene = new THREE.Scene();
@@ -388,11 +510,9 @@
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
       const orbitSegment = daysElapsed % orbitDays; // get remainder within the 1830-day cycle
       return (orbitSegment / orbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
-      }
+    }
 
-    //let initialPosition = getInitialPosition();
     const totalSeconds = orbitDays * 24 * 60 * 60;
-    //let speedMultiplier = 1;
     const radiansPerSecond = (2 * Math.PI) / totalSeconds;
 
     let originalAngle = getInitialPosition();
@@ -403,9 +523,22 @@
 
     // Speed slider event listener
     const speedSlider = document.getElementById('speed-slider');
+    const speedDisplay = document.getElementById('speed-display');
+
     speedSlider.addEventListener('input', () => {
       speedIndex = parseInt(speedSlider.value, 10);
       speedMultiplier = speedOptions[speedIndex];
+      
+      // Update the speed display
+      if (speedIndex === 13) {
+        speedDisplay.textContent = "";
+        isPlaying = false;
+      } else {
+        isPlaying = true;
+        lastSpeedIndex = speedIndex;
+        speedDisplay.textContent = getSpeedLabel(speedIndex);
+      }
+      
       updateSimulatedDate();
     });
 
@@ -416,6 +549,10 @@
         elapsedSeconds = 0;
         speedMultiplier = 0;
         speedSlider.value = 13;
+        speedIndex = 13;
+        isPlaying = false;
+        lastSpeedIndex = 13;
+        speedDisplay.textContent = "";
         referenceDate.setTime(Date.now());
         updateSimulatedDate();
     });
