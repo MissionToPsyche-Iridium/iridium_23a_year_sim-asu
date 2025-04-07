@@ -13,6 +13,7 @@ const Header = () => {
       <div className="header-buttons">
         <NavLink to="/Home" className={({ isActive }) => isActive ? "header-button active-button" : "header-button"}>Home</NavLink>
         <NavLink to="/About" className={({ isActive }) => isActive ? "header-button active-button" : "header-button"}>About</NavLink>
+        <NavLink to="/SimulationDetails" className={({ isActive }) => isActive ? "header-button active-button" : "header-button"}>Credits</NavLink>
       </div>
     </header>
   );
