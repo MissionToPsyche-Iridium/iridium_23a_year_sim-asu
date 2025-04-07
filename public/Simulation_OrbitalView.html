@@ -8,6 +8,45 @@
     body { margin: 0; overflow: hidden; }
     #container { width: 100vw; height: 100vh; }
 
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Lato', monospace;
+    }
+
+    #speed-slider {
+      width: 300px;
+      font-family: 'Lato', monospace;
+    }
+
+    #reset-btn {
+      position: fixed;
+      bottom: -10px;
+      left: -215px;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      height: 40px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-family: 'Lato', monospace;
+    }
+
+    #reset-btn:hover {
+      background: #218838;
+    }
+
     #fullscreen-btn {
         position: absolute;
         bottom: 10px;
@@ -56,8 +95,12 @@
 </head>
 <body>
 <div id="date-display"></div>
-
 <div id="container"></div>
+<div id="controls">
+  <input id="speed-slider" type="range" min="0" max="26" step="1" value="13">
+  <br>SPEED<br>
+  <button id="reset-btn">Reset Position</button>
+</div>
 <button id="fullscreen-btn" title="Toggle Fullscreen">
   <img id="fullscreen-icon" src="fullscreen_24dp_E3E3E3.png" alt="Fullscreen Icon">
 </button>
@@ -70,8 +113,8 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
 
-      // Date and time display function
-      function updateDateTime() {
+    // Date and time display function
+    function updateDateTime() {
       const dateDisplay = document.getElementById('date-display');
       const now = new Date();
 
@@ -86,7 +129,59 @@
       dateDisplay.innerHTML = `${day} ${month} ${year}<br>${hours}:${minutes}:${seconds}`;
     }
 
-    // Update the date and time every second
+    const referenceDate = new Date();
+    const clock = new THREE.Clock();
+    const speedOptions = [
+      -60 * 60 * 24 * 365, // -1 year
+      -60 * 60 * 24 * 30 * 9,  // -9 months
+      -60 * 60 * 24 * 30 * 6,  // -6 months
+      -60 * 60 * 24 * 30 * 3,      // -3 months
+      -60 * 60 * 24 * 30,      // -1 month
+      -60 * 60 * 24 * 7 * 2, // -2 weeks
+      -60 * 60 * 24 * 7, // -1 week
+      -60 * 60 * 24,     // -1 day
+      -12 * 60 * 60,     // -12 hr
+      -60 * 60,          // -1 hr
+      -10 * 60,          // -10 min
+      -5 * 60,           // -5 min
+      -60,               // -1 min
+      0,
+      60,               // +1 min
+      5 * 60,           // +5 min
+      10 * 60,          // +10 min
+      60 * 60,          // +1 hr
+      12 * 60 * 60,     // +12 hr
+      60 * 60 * 24,     // +1 day
+      60 * 60 * 24 * 7, // +1 week
+      60 * 60 * 24 * 7 * 2, // +2 weeks
+      60 * 60 * 24 * 30,      // +1 month
+      60 * 60 * 24 * 30 * 3,      // +3 months
+      60 * 60 * 24 * 30 * 6,  // +6 months
+      60 * 60 * 24 * 30 * 9,  // +9 months
+      60 * 60 * 24 * 365,     // +1 year
+    ];
+
+    function updateSimulatedDate() {
+      const now = new Date();
+      let simDate;
+
+      if (speedMultiplier === 0) {
+        simDate = now; // fallback to real time when speed is zero
+      } else {
+        simDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      }
+
+      const day = String(simDate.getDate()).padStart(2, '0');
+      const month = simDate.toLocaleString('default', { month: 'long' }).toUpperCase();
+      const year = simDate.getFullYear();
+      const hours = String(simDate.getHours()).padStart(2, '0');
+      const minutes = String(simDate.getMinutes()).padStart(2, '0');
+      const seconds = String(simDate.getSeconds()).padStart(2, '0');
+
+      document.getElementById('date-display').innerHTML =
+        `${day} ${month} ${year}<br>${hours}:${minutes}:${seconds}`;
+    }
+
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
@@ -181,6 +276,10 @@
 
         // Add the asteroid to the parent group
         asteroidGroup.add(asteroid);
+
+        const x = -290 + orbitRadius * Math.cos(-initialAngle);
+        const z = 0 + orbitRadius * Math.sin(-initialAngle);
+        asteroid.position.set(x, 0, z);
 
         // Set the OrbitControls target to the asteroid's group center
         controls.target.set(0, 0, 0);
@@ -291,7 +390,35 @@
       return (orbitSegment / orbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
       }
 
-    let initialPosition = getInitialPosition();
+    //let initialPosition = getInitialPosition();
+    const totalSeconds = orbitDays * 24 * 60 * 60;
+    //let speedMultiplier = 1;
+    const radiansPerSecond = (2 * Math.PI) / totalSeconds;
+
+    let originalAngle = getInitialPosition();
+    let initialAngle = originalAngle;
+
+    let speedIndex = 13;
+    let speedMultiplier = speedOptions[speedIndex];
+
+    // Speed slider event listener
+    const speedSlider = document.getElementById('speed-slider');
+    speedSlider.addEventListener('input', () => {
+      speedIndex = parseInt(speedSlider.value, 10);
+      speedMultiplier = speedOptions[speedIndex];
+      updateSimulatedDate();
+    });
+
+    // Reset button event listener
+    const resetBtn = document.getElementById('reset-btn');
+    resetBtn.addEventListener('click', () => {
+        initialPosition = originalAngle;
+        elapsedSeconds = 0;
+        speedMultiplier = 0;
+        speedSlider.value = 13;
+        referenceDate.setTime(Date.now());
+        updateSimulatedDate();
+    });
 
     function getInitialAngle() {
       const startDate = new Date(2020, 0, 1); // reference date
@@ -305,8 +432,15 @@
       return initialAngle;
     }
 
+    let elapsedSeconds = 0;
+
     function animate() {
       requestAnimationFrame(animate);
+
+      const rawDelta = clock.getDelta();         // Real time between frames
+      const simDelta = rawDelta * speedMultiplier; // Simulated time
+      elapsedSeconds += simDelta;
+      updateSimulatedDate();
 
       if (asteroid) {
 
@@ -321,10 +455,12 @@
         // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
         // circumference / the number of days it takes to orbit
 
-        const orbitalSpeed = 0.0000001923; // ACTUAL speed, keeping it at 0.01 for testing only
+        //const baseOrbitalSpeed = 0.0000001923;
+        //const orbitalSpeed = baseOrbitalSpeed * 2 * Math.PI / orbitDays;
+
+        //const orbitalSpeed = 0.0000001923 * speedMultiplier; // ACTUAL speed, keeping it at 0.01 for testing only
         //const orbitalSpeed = 0.1;
-        const elapsedTime = performance.now() * 0.001; // Convert ms to seconds
-        const dynamicAngle = initialPosition + elapsedTime * orbitalSpeed;
+        const dynamicAngle = initialAngle + elapsedSeconds * radiansPerSecond;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
         asteroid.position.z = 0 + orbitRadius * Math.sin(-dynamicAngle);
@@ -333,10 +469,7 @@
 
         // accurate axis
         const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
-        const deltaTime = performance.now() * -0.001;
-
-        const initialAngle = getInitialAngle();
-        asteroid.rotation.z = initialAngle + deltaTime * psycheRotationSpeed;
+        asteroid.rotation.z += simDelta * psycheRotationSpeed;
 
         controls.update();
 
@@ -360,6 +493,11 @@
     }
 
     animate();
+
+    resetBtn.addEventListener('click', () => {
+      initialPosition = getInitialPosition();
+      elapsedSeconds = 0;  // Reset the time to fix animation desync
+    });
 
     // Handle window resizing
     window.addEventListener("resize", () => {
