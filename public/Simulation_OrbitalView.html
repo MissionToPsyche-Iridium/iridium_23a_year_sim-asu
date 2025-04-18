@@ -85,18 +85,6 @@
       color: white;
       z-index: 10;
     }
-    #playback-buttons {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
-    }
-    #playback-icon {
-        width: 15px;   /* change to 32px, 40px, etc. if you want larger */
-        height: 15px;
-        bottom: 10px;
-        display: block;
-        pointer-events: none;
-      }
     #ui-wrapper {
       position: absolute;
       bottom: 20px;
@@ -109,6 +97,13 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+    #playback-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      align-items: center;
+    }
+
     .circle-btn {
       background: #0000;
       color: #f3f3f4;
@@ -119,14 +114,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      padding: 0;
       cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
+      transition: transform 0.2s;
     }
+
+    .playback-icon {
+      width: 15px;
+      height: 15px;
+      pointer-events: none;
+    }
+
     .circle-btn:hover {
-      background-color: #0000;
       transform: scale(1.1);
     }
+
     .circle-btn:active {
       transform: scale(0.95);
     }
@@ -141,11 +143,10 @@
     <input id="speed-slider" type="range" min="0" max="26" step="1" value="13">
   </div>
   <div id="playback-buttons">
-    <button id="slow-down-btn" class="circle-btn"><img id="playback-icon" src="fast-rewind-1-128.png"></button>
-    <button id="pause-btn" class="circle-btn"><img id="playback-icon" src="icon-pause-128.png"></button>
-    <button id="play-btn" class="circle-btn"><img id="playback-icon" src="play-button-6-128.png"></button>
-    <button id="reset-btn" class="circle-btn"><img id="playback-icon" src="reset-40-128.png"></button>
-    <button id="speed-up-btn" class="circle-btn"><img id="playback-icon" src="fast-forward-9-128.png"></button>
+    <button id="slow-down-btn" class="circle-btn"><img class="playback-icon" src="fast-rewind-1-128.png"></button>
+    <button id="play-pause-btn" class="circle-btn"><img class="playback-icon" id="play-pause-icon" src="icon-pause-128.png"></button>
+    <button id="reset-btn" class="circle-btn"><img class="playback-icon" src="reset-40-128.png"></button>
+    <button id="speed-up-btn" class="circle-btn"><img class="playback-icon" src="fast-forward-9-128.png"></button>
   </div>
 </div>
 
@@ -160,23 +161,6 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-
-    // Date and time display function
-    function updateDateTime() {
-      const dateDisplay = document.getElementById('date-display');
-      const now = new Date();
-
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = now.toLocaleString('default', { month: 'long' }).toUpperCase();
-      const year = now.getFullYear();
-      
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-
-      dateDisplay.innerHTML = `${day} ${month} ${year}<br>${hours}:${minutes}:${seconds}`;
-    }
-
     const referenceDate = new Date();
     const clock = new THREE.Clock();
     const speedOptions = [
@@ -220,62 +204,73 @@
       return speedLabels[index];
     }
 
-    function updateSimulatedDate() {
-      const now = new Date();
-      let simDate;
+    let pausedTime = null;
 
-      if (speedMultiplier === 0) {
-        simDate = now; // fallback to real time when speed is zero
+    function updateSimulatedDate() {
+      let displayDate;
+      
+      if (speedMultiplier === 0 && pausedTime !== null) {
+        // When paused, show the frozen simulated time
+        displayDate = new Date(pausedTime);
+      } else if (speedMultiplier === 0) {
+        // When reset, show current real time
+        displayDate = new Date();
       } else {
-        simDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+        // When simulating, show simulated time
+        displayDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       }
 
-      const day = String(simDate.getDate()).padStart(2, '0');
-      const month = simDate.toLocaleString('default', { month: 'long' }).toUpperCase();
-      const year = simDate.getFullYear();
-      const hours = String(simDate.getHours()).padStart(2, '0');
-      const minutes = String(simDate.getMinutes()).padStart(2, '0');
-      const seconds = String(simDate.getSeconds()).padStart(2, '0');
+      const day = String(displayDate.getUTCDate()).padStart(2, '0');
+      const month = displayDate.toLocaleString('en-US', {month: 'long', timeZone: 'UTC'}).toUpperCase();
+      const year = displayDate.getUTCFullYear();
+      const hours = String(displayDate.getUTCHours()).padStart(2, '0');
+      const minutes = String(displayDate.getUTCMinutes()).padStart(2, '0');
+      const seconds = String(displayDate.getUTCSeconds()).padStart(2, '0');
 
       document.getElementById('date-display').innerHTML =
         `${day} ${month} ${year}<br>${hours}:${minutes}:${seconds}`;
     }
 
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-
     // Add play/pause state variables
     let isPlaying = false;
     let lastSpeedIndex = 13; // Store the last speed before pausing
 
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const playPauseIcon = document.getElementById('play-pause-icon');
     const slowDownBtn = document.getElementById('slow-down-btn');
     const speedUpBtn = document.getElementById('speed-up-btn');
 
-    // Play button functionality
-    playBtn.addEventListener('click', () => {
-      if (!isPlaying) {
-        if (speedMultiplier === 0 && lastSpeedIndex !== 13) {
-          speedSlider.value = lastSpeedIndex;
-          speedMultiplier = speedOptions[lastSpeedIndex];
-        } else if (speedMultiplier === 0) {
-          // If no last speed, default to +1 minute
-          speedSlider.value = 14; // +1 minute index
-          speedMultiplier = speedOptions[14];
+    // Play/Pause toggle functionality
+    playPauseBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        // Pause
+        pausedTime = referenceDate;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
+      } else {
+        // If slider is at 13 (paused), use last known or default speed
+        if (speedIndex === 13) {
+          speedMultiplier = speedOptions[lastSpeedIndex !== 13 ? lastSpeedIndex : 13];
+        } else {
+          speedMultiplier = speedOptions[speedIndex];
+          lastSpeedIndex = speedIndex;
         }
+
         isPlaying = true;
+        playPauseIcon.src = "icon-pause-128.png";
+
+        // Resume from pausedTime if applicable
+        if (pausedTime !== null) {
+          referenceDate.setTime(pausedTime);
+          elapsedSeconds = 0;
+          pausedTime = null;
+        }
       }
+
+      updateSpeedDisplay();
+      updateSimulatedDate();
     });
 
-    // Pause button functionality
-    pauseBtn.addEventListener('click', () => {
-      if (speedMultiplier !== 0) {
-        lastSpeedIndex = speedSlider.value; // Store current speed before pausing
-      }
-      speedMultiplier = 0;
-      isPlaying = false;
-    });
 
     // Slow down button functionality
     slowDownBtn.addEventListener('click', () => {
@@ -471,7 +466,7 @@
 
     // Add the orbital path to the scene
     const orbitRadius = 352.5;
-    const orbitDays = 1830;
+    const orbitDays = 1824.5;
     const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
     orbitPath.position.set(-290, 0, 0); // Match the sun's position
     scene.add(orbitPath);
@@ -528,16 +523,17 @@
     speedSlider.addEventListener('input', () => {
       speedIndex = parseInt(speedSlider.value, 10);
       speedMultiplier = speedOptions[speedIndex];
+      lastSpeedIndex = speedIndex;
       
-      // Update the speed display
       if (speedIndex === 13) {
         speedDisplay.textContent = "";
-        isPlaying = false;
       } else {
-        isPlaying = true;
-        lastSpeedIndex = speedIndex;
         speedDisplay.textContent = getSpeedLabel(speedIndex);
       }
+      
+      // Automatically play when changing speed
+      isPlaying = speedIndex !== 13;
+      playPauseIcon.src = isPlaying ? "icon-pause-128.png" : "play-button-6-128.png";
       
       updateSimulatedDate();
     });
@@ -545,16 +541,18 @@
     // Reset button event listener
     const resetBtn = document.getElementById('reset-btn');
     resetBtn.addEventListener('click', () => {
-        initialPosition = originalAngle;
-        elapsedSeconds = 0;
-        speedMultiplier = 0;
-        speedSlider.value = 13;
-        speedIndex = 13;
-        isPlaying = false;
-        lastSpeedIndex = 13;
-        speedDisplay.textContent = "";
-        referenceDate.setTime(Date.now());
-        updateSimulatedDate();
+      initialAngle = originalAngle;
+      elapsedSeconds = 0;
+      speedMultiplier = 0;
+      speedSlider.value = 13;
+      speedIndex = 13;
+      isPlaying = false;
+      lastSpeedIndex = 13;
+      pausedTime = null;
+      speedDisplay.textContent = "";
+      referenceDate.setTime(Date.now()); // Reset to current real time
+      playPauseIcon.src = "icon-pause-128.png";
+      updateSimulatedDate();
     });
 
     function getInitialAngle() {
