@@ -158,6 +158,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -250,10 +256,11 @@
       } else {
         // If slider is at 13 (paused), use last known or default speed
         if (speedIndex === 13) {
+          // Keep slider at 13, but use a temporary playback speed
           speedMultiplier = speedOptions[lastSpeedIndex !== 13 ? lastSpeedIndex : 13];
         } else {
           speedMultiplier = speedOptions[speedIndex];
-          lastSpeedIndex = speedIndex;
+          lastSpeedIndex = speedIndex; // Update lastSpeedIndex
         }
 
         isPlaying = true;
@@ -304,6 +311,7 @@
 
     // Add scene
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -340,11 +348,9 @@
           }
         });
 
-
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
     scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 1.5);
+    const pointLight = new THREE.PointLight(0xffffff, 0.6);
     pointLight.position.set(-10, 10, 5);
     scene.add(pointLight);
 
@@ -364,7 +370,7 @@
 
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 10;
-    controls.maxDistance = 2000;
+    controls.maxDistance = 200;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -382,7 +388,13 @@
         // Adjust material to be a darker gray and respond to lighting
         asteroid.traverse((child) => {
           if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8, metalness: 0.3 });
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x808080,
+              roughness: 0.8,
+              metalness: 0.3,
+              depthWrite: true,
+              depthTest: true
+            });
           }
         });
 
@@ -392,6 +404,7 @@
         asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
 
         // Add the asteroid to the parent group
+        asteroid.renderOrder = 1;
         asteroidGroup.add(asteroid);
 
         const x = -290 + orbitRadius * Math.cos(-initialAngle);
@@ -413,7 +426,7 @@
     const starCount = 5000;
     const starVertices = [];
     const time = 1;
-    const day_x = 0.0005;
+    const day_x = 0.005;
     const day_y = 0.001;
 
     for (let i = 0; i < starCount; i++) {
@@ -427,6 +440,78 @@
     const stars = new THREE.Points(starGeometry, starMaterial);
     scene.add(stars);
 
+
+    let bloomComposer, finalComposer;
+    let bloomLayer;
+
+    function setupBloom() {
+      const bloomParams = {
+        resolutionScale: 0.5,
+        exposure: 1,
+        bloomStrength: 1,
+        bloomThreshold: 0.4,
+        bloomRadius: 0.5
+      };
+      
+      const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(
+          window.innerWidth * bloomParams.resolutionScale,
+          window.innerHeight * bloomParams.resolutionScale
+        ),
+        bloomParams.bloomStrength,
+        bloomParams.bloomRadius,
+        bloomParams.bloomThreshold
+      );
+
+      const renderScene = new THREE.RenderPass(scene, camera);
+      
+      // Bloom composer (only renders bloom layer)
+      bloomComposer = new THREE.EffectComposer(renderer);
+      bloomComposer.renderToScreen = false;
+      bloomComposer.addPass(renderScene);
+      bloomComposer.addPass(bloomPass);
+
+      // Final composer (renders everything)
+      finalComposer = new THREE.EffectComposer(renderer);
+      finalComposer.addPass(renderScene);
+      
+      // Mix bloom with original scene
+      const mixPass = new THREE.ShaderPass(
+        new THREE.ShaderMaterial({
+          uniforms: {
+            baseTexture: { value: null },
+            bloomTexture: { value: bloomComposer.renderTarget2.texture },
+            intensity: { value: 0.8 }
+          },
+          vertexShader: `
+            varying vec2 vUv;
+            void main() {
+              vUv = uv;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform sampler2D baseTexture;
+            uniform sampler2D bloomTexture;
+            uniform float intensity;
+            varying vec2 vUv;
+            
+            void main() {
+              vec4 baseColor = texture2D(baseTexture, vUv);
+              vec4 bloomColor = texture2D(bloomTexture, vUv);
+              gl_FragColor = baseColor + bloomColor * intensity;
+            }
+          `,
+          defines: {}
+        }), 
+        "baseTexture"
+      );
+      mixPass.needsSwap = true;
+      mixPass.renderToScreen = true;
+      
+      finalComposer.addPass(mixPass);
+    }
+
     // Adding the sun using GLB model
     const loader2 = new THREE.GLTFLoader();
 
@@ -435,13 +520,28 @@
       './sun.glb',
       (gltf) => {
         sunModel = gltf.scene;
-
         console.log('Sun model loaded:', sunModel);
 
         sunModel.position.set(-330, 0, 0);
-        sunModel.scale.set(0.155, 0.155, 0.155); //measured by psyche diameter divided by sun diameter, sun is 6194 times larger than psyche
+        sunModel.scale.set(0.155, 0.155, 0.155);
+        
+        sunModel.traverse((child) => {
+          if (child.isMesh) {
+            child.layers.enable(1);
+            child.material = new THREE.MeshBasicMaterial({
+              color: 0xFDB813,
+              toneMapped: false,
+              depthWrite: true,
+              depthTest: true,
+              transparent: false,
+              opacity: 0.9
+            });
+          }
+        });
 
+        sunModel.renderOrder = -1;
         scene.add(sunModel);
+        setupBloom();
       },
       undefined,
       (error) => {
@@ -450,8 +550,8 @@
     );
 
     // Create the orbital path
-    const createOrbitalPath = (radius, color = 0xffffff) => {
-      const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 1024);
+    const createOrbitalPath = (radius, color = 0xffffff,) => {
+      const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 512);
       const orbitMaterial = new THREE.MeshBasicMaterial({
         color: color,
         side: THREE.DoubleSide,
@@ -590,11 +690,6 @@
         // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
         // circumference / the number of days it takes to orbit
 
-        //const baseOrbitalSpeed = 0.0000001923;
-        //const orbitalSpeed = baseOrbitalSpeed * 2 * Math.PI / orbitDays;
-
-        //const orbitalSpeed = 0.0000001923 * speedMultiplier; // ACTUAL speed, keeping it at 0.01 for testing only
-        //const orbitalSpeed = 0.1;
         const dynamicAngle = initialAngle + elapsedSeconds * radiansPerSecond;
 
         asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
@@ -620,11 +715,23 @@
           // Update the control target to the asteroid
           controls.target.copy(newTarget);
         }
-
       }
+
+      // Render with bloom
+      if (bloomComposer && finalComposer) {
+      // First render all objects (layer 0)
+      camera.layers.set(0);
+      renderer.clear();
+      finalComposer.render();
       
-      controls.update();
+      // Then render sun with bloom (layer 1)
+      camera.layers.set(0);
+      bloomComposer.render();
+      
+      camera.layers.set(0);
+    } else {
       renderer.render(scene, camera);
+    }
     }
 
     animate();
@@ -639,8 +746,12 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+      
+      if (bloomComposer && finalComposer) {
+        bloomComposer.setSize(window.innerWidth, window.innerHeight);
+        finalComposer.setSize(window.innerWidth, window.innerHeight);
+      }
     });
-
   });
 </script>
 </body>
