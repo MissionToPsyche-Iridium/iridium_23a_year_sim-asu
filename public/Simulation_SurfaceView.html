@@ -118,6 +118,42 @@
         display: block;
         pointer-events: none;
       }
+      /* Standard browsers */
+      :fullscreen #ui-left {
+        left: 20px !important;
+        gap: 20px !important; 
+      }
+      :fullscreen #ui-left button {
+        transform: scale(1.2) !important;
+        transform-origin: left center;
+      }
+
+      :fullscreen #ui-right {
+        right: 20px !important;   /* was 10px, now 60px */
+      }
+      :fullscreen #ui-right .slider-box {
+        transform: scale(1.2) !important;
+        transform-origin: right center;
+      }
+
+
+      /* WebKit/Safari */
+      :-webkit-full-screen #ui-left {
+        left: 20px !important;
+        gap: 20px !important; 
+      }
+      :-webkit-full-screen #ui-left button {
+        transform: scale(1.2) !important;
+        transform-origin: left center;
+      }
+
+      :-webkit-full-screen #ui-right {
+        right: 20px !important;
+      }
+      :-webkit-full-screen #ui-right .slider-box {
+        transform: scale(1.2) !important;
+        transform-origin: right center;
+      }
     </style>
   </head>
   <body>
