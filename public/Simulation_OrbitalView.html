@@ -21,8 +21,7 @@
     #date-display,
     #speed-display,
     #ui-wrapper,
-    #fullscreen-btn,
-    #view-toggle-btn {
+    #fullscreen-btn {
       position: absolute;
       z-index: 10;
       border-radius: 5px;
@@ -109,28 +108,39 @@
   
     #button-container {
       position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      gap: 10px;
-    }
-
-    #view-toggle-btn {
-      left: 20px;
       top: 50%;
       transform: translateY(-50%);
-      padding: 10px 15px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      left: 10px;
+      border-radius: 8px;
+    }
+
+    #view-toggle-btn,
+    #overhead-view-btn,
+    #toggle-orbit-btn {
+      padding: 10px 20px;
       background: #DB371F;
       color: white;
       font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 5px;
+      text-align: center;
+      display: block;
+      margin: 0;
     }
-  
-    #view-toggle-btn:hover {
+
+    #view-toggle-btn:hover,
+    #overhead-view-btn:hover,
+    #toggle-orbit-btn:hover {
       background: #9d2715;
+      transform: translateY(-2px) scale(1.02);
     }
-  
+
     #playback-buttons {
       display: flex;
       gap: 10px;
@@ -157,7 +167,11 @@
 <div id="container"></div>
 <div id="date-display"></div>
 <div id="speed-display"></div>
-<button id="view-toggle-btn" title="Toggle View">View: Earth</button>
+<div id="button-container">
+  <button id="view-toggle-btn" title="Toggle View">View: Earth</button>
+  <button id="overhead-view-btn" title="Toggle Overhead View">Overhead View</button>
+  <button id="toggle-orbit-btn" title="Toggle Orbit Visibility">Hide Orbits</button>
+</div>
 <div id="ui-wrapper">
   <div id="controls">
     <input id="speed-slider" type="range" min="0" max="28" step="1" value="14">
@@ -238,6 +252,15 @@
     minDate.setFullYear(minDate.getFullYear() - 10);
     const maxDate = new Date(now);
     maxDate.setFullYear(maxDate.getFullYear() + 10);
+
+    let isOverheadView = false;
+    let showOrbits = true;
+
+    let savedCameraState = {
+      position: new THREE.Vector3(),
+      target: new THREE.Vector3(),
+      fov: 25
+    };
 
     function updateSimulatedDate() {
       let displayDate;
@@ -352,6 +375,69 @@
       updateSpeedDisplay();
     });
 
+    const overheadViewBtn = document.getElementById('overhead-view-btn');
+    const toggleOrbitBtn = document.getElementById('toggle-orbit-btn');
+
+    overheadViewBtn.addEventListener('click', () => {
+      if (isOverheadView) {
+        resetOverheadView();
+      } else {
+        // Save current camera state
+        savedCameraState = {
+          position: camera.position.clone(),
+          target: controls.target.clone(),
+          fov: camera.fov
+        };
+
+        // Set camera position above the Sun
+        const sunPosition = new THREE.Vector3(-330, 0, 0);
+        camera.position.set(sunPosition.x, sunPosition.y + 1700, sunPosition.z);
+        
+        // Look at the Sun
+        controls.target.copy(sunPosition);
+        controls.enableRotate = false;
+        controls.minDistance = 1700;
+        controls.maxDistance = 1700;
+        camera.fov = 30;
+        camera.updateProjectionMatrix();
+        controls.update();
+        
+        // Update the button state
+        isOverheadView = true;
+        overheadViewBtn.textContent = "Normal View";
+      }
+    });
+
+    function resetOverheadView() {
+      if (isOverheadView) {
+        camera.position.copy(savedCameraState.position);
+        controls.target.copy(savedCameraState.target);
+        controls.enableRotate = true;
+        controls.reset();
+        camera.fov = savedCameraState.fov;
+        camera.updateProjectionMatrix();
+        controls.reset();
+        controls.update();
+        
+        // Update the button state
+        isOverheadView = false;
+        overheadViewBtn.textContent = "Overhead View";
+      }
+    }
+
+    toggleOrbitBtn.addEventListener('click', () => {
+      showOrbits = !showOrbits;
+      toggleOrbitBtn.textContent = showOrbits ? "Hide Orbits" : "Show Orbits";
+      
+      if (showOrbits) {
+        scene.add(psycheOrbitPath);
+        scene.add(earthOrbitPath);
+      } else {
+        scene.remove(psycheOrbitPath);
+        scene.remove(earthOrbitPath);
+      }
+    });
+
     function updateSpeedDisplay() {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       
@@ -429,7 +515,7 @@
 
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 10;
-    controls.maxDistance = 2000;
+    controls.maxDistance = 1000;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -804,6 +890,7 @@
     let currentView = 'psyche';
     
     function toggleView() {
+      resetOverheadView();
       currentView = currentView === 'psyche' ? 'earth' : 'psyche';
       viewToggleBtn.textContent = `View: ${currentView === 'psyche' ? 'Earth' : 'Psyche'}`;
 
@@ -863,17 +950,18 @@
 
         controls.update();
 
-        if (currentView === 'psyche' && asteroid) {
-          const previousTarget = controls.target.clone();
-          const newTarget = asteroid.position.clone();
-          const targetDelta = newTarget.clone().sub(previousTarget);
-          
-          // Move the camera by the same delta
-          camera.position.add(targetDelta);
+        if (!isOverheadView) {
+          if (currentView === 'psyche' && asteroid) {
+            const previousTarget = controls.target.clone();
+            const newTarget = asteroid.position.clone();
+            const targetDelta = newTarget.clone().sub(previousTarget);
+            
+            // Move the camera by the same delta
+            camera.position.add(targetDelta);
 
-          // Update the control target to the asteroid
-          controls.target.copy(newTarget);
-        }
+            // Update the control target to the asteroid
+            controls.target.copy(newTarget);
+          }
 
         else if (currentView === 'earth' && earth) {
           const previousTarget = controls.target.clone();
@@ -886,6 +974,7 @@
           // Update the control target to the earth
           controls.target.copy(newTarget);
         }
+      }
       
       controls.update();
 
