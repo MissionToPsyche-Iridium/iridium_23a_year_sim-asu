@@ -1,14 +1,22 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';  //Helmet to change page title
-import '../styles.css';  
+import '../styles.css';
+import logo from './logo.png';  
 
 const Credits = () => {
     return (
-        <div>
+        <div className="credits" style={{ textAlign: 'center' }}>
           <main>
               <Helmet>
                 <title>Credits - Psyche Simulation</title>
               </Helmet>
+                <img src={logo} 
+                  alt="Welcome to Psyche Simulation" 
+                  style={{
+                  width: '25%', 
+                  height: 'auto',
+                  }}/>
+              
               <h2>ASU - NASA - Year on Psyche Simulation - Team 1 Members:</h2>
               <p>Akshay Pasumarthi<br></br>Luka Micevic<br></br>Luz Rodriguez<br></br>Melody Musmacker<br></br>Tanav Jalan</p>
               <p></p>

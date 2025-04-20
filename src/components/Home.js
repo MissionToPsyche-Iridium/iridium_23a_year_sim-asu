@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';  // Helmet to change page title
 import '../styles.css';
+import logo from './logo.png';
 
 const Home = () => {
   const [activeButton, setActiveButton] = useState('System View');
@@ -27,9 +28,17 @@ const Home = () => {
         <title>Home - Psyche Simulation</title>
       </Helmet>
 
-      <div className="home-page">
-        <h2>Welcome to the Year on Psyche Simulation</h2>
-        <p>Click on the below buttons to change your view of Psyche</p>
+      <div className="home-page" style={{ textAlign: 'center' }}>
+        <img 
+          src={logo} 
+          alt="Welcome to Psyche Simulation" 
+          style={{
+            width: '30%', 
+            height: 'auto',
+            marginTop: '1rem',
+            marginBottom: '1rem' // Add some space below the image
+          }}
+        />
       </div>
 
       {/* Simulation layout: side-by-side */}
