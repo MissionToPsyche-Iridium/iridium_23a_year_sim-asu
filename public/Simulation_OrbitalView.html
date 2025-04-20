@@ -132,6 +132,7 @@
     .circle-btn:active {
       transform: scale(0.95);
     }
+    
   </style>
 </head>
 <body>
@@ -249,35 +250,27 @@
     // Play/Pause toggle functionality
     playPauseBtn.addEventListener('click', () => {
       if (isPlaying) {
-        // Pause
-        pausedTime = referenceDate;
+        // Pause the simulation
+        pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
+        speedMultiplier = 0;
         isPlaying = false;
         playPauseIcon.src = "play-button-6-128.png";
       } else {
-        // If slider is at 13 (paused), use last known or default speed
-        if (speedIndex === 13) {
-          // Keep slider at 13, but use a temporary playback speed
-          speedMultiplier = speedOptions[lastSpeedIndex !== 13 ? lastSpeedIndex : 13];
-        } else {
-          speedMultiplier = speedOptions[speedIndex];
-          lastSpeedIndex = speedIndex; // Update lastSpeedIndex
-        }
-
+        // Play the simulation - but keep speed at 0 if slider is at 13
+        speedMultiplier = speedOptions[speedIndex];
         isPlaying = true;
         playPauseIcon.src = "icon-pause-128.png";
-
-        // Resume from pausedTime if applicable
+        
+        // If we have a paused time, use it as reference
         if (pausedTime !== null) {
           referenceDate.setTime(pausedTime);
           elapsedSeconds = 0;
           pausedTime = null;
         }
       }
-
       updateSpeedDisplay();
       updateSimulatedDate();
     });
-
 
     // Slow down button functionality
     slowDownBtn.addEventListener('click', () => {
@@ -311,8 +304,7 @@
 
     // Add scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000);
+    const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 10000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
@@ -370,7 +362,7 @@
 
     // Limit how zoomed out and zoomed in orbital view can be
     controls.minDistance = 10;
-    controls.maxDistance = 200;
+    controls.maxDistance = 2000;
 
     // Load the asteroid asynchronously using GLTFLoader
     const loader = new THREE.GLTFLoader();
@@ -393,7 +385,8 @@
               roughness: 0.8,
               metalness: 0.3,
               depthWrite: true,
-              depthTest: true
+              depthTest: true,
+              flatShading: true
             });
           }
         });
@@ -407,8 +400,8 @@
         asteroid.renderOrder = 1;
         asteroidGroup.add(asteroid);
 
-        const x = -290 + orbitRadius * Math.cos(-initialAngle);
-        const z = 0 + orbitRadius * Math.sin(-initialAngle);
+        const x = -290 + psycheOrbitRadius * Math.cos(-initialAngle);
+        const z = 0 + psycheOrbitRadius * Math.sin(-initialAngle);
         asteroid.position.set(x, 0, z);
 
         // Set the OrbitControls target to the asteroid's group center
@@ -420,6 +413,71 @@
         console.error('Error loading asteroid model:', error);
       }
     );
+
+    let earth = null;
+
+    loader.load(
+      './Earth.glb',
+      (gltf) => {
+        earth = gltf.scene;
+        console.log('Earth model loaded:', earth);
+
+        earth.position.set(-200, 0, 0);
+        earth.scale.set(0.0155, 0.0155, 0.0155);
+
+        scene.add(earth);
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading Earth model:', error);
+      }
+    );
+
+    // Create the orbital path
+    const createPsycheOrbitalPath = (radius, color = 0xffffff) => {
+      const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI);
+
+      const points = curve.getPoints(1024);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      
+      const material = new THREE.LineBasicMaterial({
+        color: color,
+        linewidth: 1,
+        transparent: true,
+        depthTest: true,
+        opacity: 0.1
+      });
+
+      // Create the line
+      const orbitLine = new THREE.Line(geometry, material);
+      orbitLine.rotation.x = Math.PI / 2; // Rotate to be horizontal
+      orbitLine.position.set(-290, 0, 0); // Match sun position
+      
+      return orbitLine;
+    };
+
+    // Create the orbital path
+    const createEarthOrbitalPath = (radius, color = 0xffffff) => {
+      const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI);
+
+      const points = curve.getPoints(1024);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      
+      const material = new THREE.LineBasicMaterial({
+        color: color,
+        linewidth: 1,
+        transparent: true,
+        depthTest: true,
+        opacity: 0.1
+      });
+
+      // Create the line
+      const orbitLine = new THREE.Line(geometry, material);
+      orbitLine.rotation.x = Math.PI / 2; // Rotate to be horizontal
+      orbitLine.position.set(-100, 0, 0); // Match earth position
+      
+      return orbitLine;
+    };
 
     // Star field
     const starGeometry = new THREE.BufferGeometry();
@@ -512,11 +570,8 @@
       finalComposer.addPass(mixPass);
     }
 
-    // Adding the sun using GLB model
-    const loader2 = new THREE.GLTFLoader();
-
     let sunModel = null;
-    loader2.load(
+    loader.load(
       './sun.glb',
       (gltf) => {
         sunModel = gltf.scene;
@@ -549,27 +604,18 @@
       }
     );
 
-    // Create the orbital path
-    const createOrbitalPath = (radius, color = 0xffffff,) => {
-      const orbitGeometry = new THREE.RingGeometry(radius - 0.1, radius + 0.1, 512);
-      const orbitMaterial = new THREE.MeshBasicMaterial({
-        color: color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.2,
-      });
-
-      const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
-      orbit.rotation.x = Math.PI / 2;
-      return orbit;
-    };
-
     // Add the orbital path to the scene
-    const orbitRadius = 352.5;
-    const orbitDays = 1824.5;
-    const orbitPath = createOrbitalPath(orbitRadius, 0xffffff);
-    orbitPath.position.set(-290, 0, 0); // Match the sun's position
-    scene.add(orbitPath);
+    const psycheOrbitRadius = 352.5;
+    const psycheOrbitDays = 1824.5;
+    const psycheOrbitPath = createPsycheOrbitalPath(psycheOrbitRadius, 0xffffff, 1.0);
+    psycheOrbitPath.position.set(-290, 0, 0); // Match the sun's position
+    scene.add(psycheOrbitPath);
+
+    const earthOrbitRadius = 130;
+    const earthOrbitDays = 365;
+    const earthOrbitPath = createEarthOrbitalPath(earthOrbitRadius, 0xffffff, 1.0);
+    earthOrbitPath.position.set(-330, 0, 0);
+    scene.add(earthOrbitPath);
 
     let followAsteroid = true;
 
@@ -580,7 +626,7 @@
       const asteroidPos = asteroid.position.clone();
 
       const lightDirection = new THREE.Vector3().subVectors(sunPos, asteroidPos).normalize();
-      directionalLight.position.copy(lightDirection.multiplyScalar(orbitRadius * 1.2));
+      directionalLight.position.copy(lightDirection.multiplyScalar(psycheOrbitRadius * 1.2));
     }
 
     // Calculate the asteroid's starting position based on a date
@@ -600,14 +646,14 @@
     // is mapped to a point in the orbit
 
     function getInitialPosition() {
-      const startDate = new Date(2020, 0, 1); // random reference date
+      const startDate = new Date(2023, 8, 13); // epoch date for psyche on wikipedia
       const today = new Date();
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
-      const orbitSegment = daysElapsed % orbitDays; // get remainder within the 1830-day cycle
-      return (orbitSegment / orbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
+      const orbitSegment = daysElapsed % psycheOrbitDays; // get remainder within the 1830-day cycle
+      return (orbitSegment / psycheOrbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
     }
 
-    const totalSeconds = orbitDays * 24 * 60 * 60;
+    const totalSeconds = psycheOrbitDays * 24 * 60 * 60;
     const radiansPerSecond = (2 * Math.PI) / totalSeconds;
 
     let originalAngle = getInitialPosition();
@@ -623,18 +669,26 @@
     speedSlider.addEventListener('input', () => {
       speedIndex = parseInt(speedSlider.value, 10);
       speedMultiplier = speedOptions[speedIndex];
-      lastSpeedIndex = speedIndex;
       
       if (speedIndex === 13) {
+        // When setting to 0 speed, pause automatically
+        pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
         speedDisplay.textContent = "";
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
       } else {
+        // When changing to non-zero speed, play automatically
+        isPlaying = true;
         speedDisplay.textContent = getSpeedLabel(speedIndex);
+        playPauseIcon.src = "icon-pause-128.png";
+        
+        // If we were paused, update referenceDate to the paused time
+        if (pausedTime !== null) {
+          referenceDate.setTime(pausedTime);
+          elapsedSeconds = 0;
+          pausedTime = null;
+        }
       }
-      
-      // Automatically play when changing speed
-      isPlaying = speedIndex !== 13;
-      playPauseIcon.src = isPlaying ? "icon-pause-128.png" : "play-button-6-128.png";
-      
       updateSimulatedDate();
     });
 
@@ -692,8 +746,8 @@
 
         const dynamicAngle = initialAngle + elapsedSeconds * radiansPerSecond;
 
-        asteroid.position.x = -290 + orbitRadius * Math.cos(-dynamicAngle);
-        asteroid.position.z = 0 + orbitRadius * Math.sin(-dynamicAngle);
+        asteroid.position.x = -290 + psycheOrbitRadius * Math.cos(-dynamicAngle);
+        asteroid.position.z = 0 + psycheOrbitRadius * Math.sin(-dynamicAngle);
 
         //asteroid.rotation.y = dynamicAngle;
 
