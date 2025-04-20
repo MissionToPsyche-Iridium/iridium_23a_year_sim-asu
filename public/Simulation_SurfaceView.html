@@ -179,9 +179,9 @@
     <div id="ui-right">
 
       <div class="slider-box">
-        <input id="axrotSlider" type="range" min="0" max="252" value="0" step="1">
+        <input id="axrotSlider" type="range" min="0" max="252" value="0" step="1" style="accent-color: #DB371F;">
         <label id="axrotLabel">Time: 0h 0m</label>
-        <input id="lightSlider" type="range" min="0" max="1828" value="0" step="1">
+        <input id="lightSlider" type="range" min="0" max="1828" value="0" step="1" style="accent-color: #DB371F;">
         <label id="lightLabel">Earth Days: 0</label>
       </div>
     </div>
@@ -299,7 +299,7 @@
         controls.autoRotate = false;
         controls.enablePan = false;
 
-        // Load the asteroid asynchronously using GLTFLoader
+        // Load the asteroid 
         const loader = new THREE.GLTFLoader();
         let asteroid = null;
         let originalMaterial = null;
@@ -316,7 +316,7 @@
             console.log("Asteroid loaded successfully");
             asteroid = gltf.scene;
 
-            //colors for temperature map
+            // Colors for temperature map
             originalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.5 });
             tempMaterial = new THREE.MeshStandardMaterial({ vertexColors: true });
 
@@ -403,7 +403,6 @@
           const days = parseInt(lightSlider.value);
           lightLabel.textContent = `Earth Days: ${days}`;
 
-          // Map 0–1828 days to 0–360 degrees (2π radians)
           lightAngle = (days / 1828) * Math.PI * 2;
 
           directionalLight.position.set(
