@@ -161,6 +161,14 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+    .label {
+      color: white;
+      font-family: 'Lato', monospace;
+      padding: 2px 6px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      pointer-events: none;
+    }
     :fullscreen #controls,
     :fullscreen #ui-wrapper {
       left: 50% !important;
@@ -226,6 +234,7 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -489,6 +498,12 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
+    const labelRenderer = new THREE.CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
 
     // Fullscreen functionality
     const fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -585,15 +600,30 @@
         const z = 0 + psycheOrbitRadius * Math.sin(-initialAngle);
         asteroid.position.set(x, 0, z);
 
+         
+        
+
+        controls.target.set(0, 0, 0);
+        controls.update();
+
         // Set the OrbitControls target to the asteroid's group center
         controls.target.set(0, 0, 0);
         controls.update();
+
+        
       },
       undefined,
       (error) => {
         console.error('Error loading asteroid model:', error);
       }
     );
+    // ←—— HERE: add your Psyche label
+    const psycheDiv = document.createElement('div');
+    psycheDiv.className = 'label';
+    psycheDiv.textContent = 'Psyche';
+    const psycheLabel = new THREE.CSS2DObject(psycheDiv);
+    psycheLabel.position.set(0, 10, 0);
+    scene.add(psycheLabel);
 
     let earth = null;
 
@@ -619,12 +649,23 @@
         earth.scale.set(0.0155, 0.0155, 0.0155);
 
         scene.add(earth);
+
       },
       undefined,
       (error) => {
         console.error('Error loading Earth model:', error);
       }
     );
+
+    // Create Earth label 
+    const earthDiv = document.createElement('div');
+    earthDiv.className = 'label';
+    earthDiv.textContent = 'Earth';
+    const earthLabel = new THREE.CSS2DObject(earthDiv);
+
+    // add to scene 
+    scene.add(earthLabel);
+
 
     // Create the orbital path
     const createPsycheOrbitalPath = (radius, color = 0xffffff) => {
@@ -1017,6 +1058,7 @@
       }
     }
 
+    
     // Render with bloom
     if (bloomComposer && finalComposer) {
       camera.layers.set(0);
@@ -1031,7 +1073,33 @@
 
     else {
       renderer.render(scene, camera);
+      
     }
+
+    if ( earth ) {
+      const earthWorldPos = new THREE.Vector3();
+      earth.getWorldPosition( earthWorldPos );
+      earthLabel.position.set(
+        earthWorldPos.x,
+        earthWorldPos.y + 6,
+        earthWorldPos.z
+      );
+    }
+
+    // only update the Psyche label if that model is ready:
+    if ( asteroid ) {
+      const psycheWorldPos = new THREE.Vector3();
+      asteroid.getWorldPosition( psycheWorldPos );
+      psycheLabel.position.set(
+        psycheWorldPos.x,
+        psycheWorldPos.y + 1,
+        psycheWorldPos.z
+      );
+    }
+
+    // then your CSS2DRenderer
+    labelRenderer.setSize( window.innerWidth, window.innerHeight );
+    labelRenderer.render( scene, camera );
   }
 
   animate();
