@@ -48,6 +48,7 @@
         cursor: pointer;
         transition: background-color 0.3s, transform 0.2s;
     }
+
     #fullscreen-btn:hover {
         background-color: #0000;
         transform: scale(1.1);
@@ -56,12 +57,14 @@
     #fullscreen-btn:active {
         transform: scale(0.95);
     }
+
     #fullscreen-icon {
-        width: 30px;   /* change to 32px, 40px, etc. if you want larger */
+        width: 30px;
         height: 30px;
         display: block;
         pointer-events: none;
     }
+    
     #date-display {
       position: absolute;
       font-family: 'Lato', monospace;
@@ -74,6 +77,7 @@
       color: white;
       z-index: 10;
     }
+
     #speed-display {
       position: absolute;
       font-family: 'Lato', monospace;
@@ -85,6 +89,7 @@
       color: white;
       z-index: 10;
     }
+
     #ui-wrapper {
       position: absolute;
       bottom: 20px;
@@ -97,6 +102,7 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+
     #playback-buttons {
       display: flex;
       flex-direction: row;
@@ -132,16 +138,37 @@
     .circle-btn:active {
       transform: scale(0.95);
     }
-    
+
+    #view-toggle-btn {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: #DB371F;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 15px;
+      font-family: 'Lato', monospace;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #view-toggle-btn:hover {
+      background: #9d2715;
+    }
   </style>
 </head>
 <body>
 <div id="container"></div>
 <div id="date-display"></div>
 <div id="speed-display"></div>
+<button id="view-toggle-btn" title="Toggle View">View: Earth</button>
 <div id="ui-wrapper">
   <div id="controls">
-    <input id="speed-slider" type="range" min="0" max="26" step="1" value="13">
+    <input id="speed-slider" type="range" min="0" max="28" step="1" value="14">
   </div>
   <div id="playback-buttons">
     <button id="slow-down-btn" class="circle-btn"><img class="playback-icon" src="fast-rewind-1-128.png"></button>
@@ -180,6 +207,7 @@
       -60 * 60 * 24 * 7, // -1 week
       -60 * 60 * 24,     // -1 day
       -12 * 60 * 60,     // -12 hr
+      -6 * 60 * 60,      // -6 hr
       -60 * 60,          // -1 hr
       -10 * 60,          // -10 min
       -5 * 60,           // -5 min
@@ -189,6 +217,7 @@
       5 * 60,           // +5 min
       10 * 60,          // +10 min
       60 * 60,          // +1 hr
+      6 * 60 * 60,      // +6 hr
       12 * 60 * 60,     // +12 hr
       60 * 60 * 24,     // +1 day
       60 * 60 * 24 * 7, // +1 week
@@ -203,9 +232,9 @@
     function getSpeedLabel(index) {
       const speedLabels = [
         "-1 YEAR", "-9 MONTHS", "-6 MONTHS", "-3 MONTHS", "-1 MONTH",
-        "-2 WEEKS", "-1 WEEK", "-1 DAY", "-12 HOURS", "-1 HOUR", "-10 MINUTES", "-5 MINUTES", "-1 MINUTE",
+        "-2 WEEKS", "-1 WEEK", "-1 DAY", "-12 HOURS", "-6 HOURS", "-1 HOUR", "-10 MINUTES", "-5 MINUTES", "-1 MINUTE",
         "0", 
-        "+1 MINUTE", "+5 MINUTES", "+10 MINUTES", "+1 HOUR", "+12 HOURS", "+1 DAY", 
+        "+1 MINUTE", "+5 MINUTES", "+10 MINUTES", "+1 HOUR", "+12 HOURS", "+6 HOURS", "+1 DAY", 
         "+1 WEEK", "+2 WEEKS", "+1 MONTH", "+3 MONTHS", "+6 MONTHS", "+9 MONTHS", "+1 YEAR"
       ];
       return speedLabels[index];
@@ -240,7 +269,7 @@
 
     // Add play/pause state variables
     let isPlaying = false;
-    let lastSpeedIndex = 13; // Store the last speed before pausing
+    let lastSpeedIndex = 14; // Store the last speed before pausing
 
     const playPauseBtn = document.getElementById('play-pause-btn');
     const playPauseIcon = document.getElementById('play-pause-icon');
@@ -295,7 +324,7 @@
     });
 
     function updateSpeedDisplay() {
-      if (speedIndex === 13) {
+      if (speedIndex === 14) {
         speedDisplay.textContent = "";
       } else {
         speedDisplay.textContent = getSpeedLabel(speedIndex);
@@ -343,7 +372,7 @@
     const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
     scene.add(ambientLight);
     const pointLight = new THREE.PointLight(0xffffff, 0.6);
-    pointLight.position.set(-10, 10, 5);
+    pointLight.position.set(10, -10, 5);
     scene.add(pointLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.1);
@@ -422,6 +451,18 @@
         earth = gltf.scene;
         console.log('Earth model loaded:', earth);
 
+        earth.traverse((child) => {
+          if (child.isMesh) {
+            const originalMaterial = child.material;
+            child.material = new THREE.MeshStandardMaterial({
+              map: originalMaterial.map,
+              depthWrite: true,
+              depthTest: true,
+              flatShading: true
+            });
+          }
+        });
+
         earth.position.set(-200, 0, 0);
         earth.scale.set(0.0155, 0.0155, 0.0155);
 
@@ -497,7 +538,6 @@
     const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
     const stars = new THREE.Points(starGeometry, starMaterial);
     scene.add(stars);
-
 
     let bloomComposer, finalComposer;
     let bloomLayer;
@@ -604,7 +644,7 @@
       }
     );
 
-    // Add the orbital path to the scene
+    // Add orbital paths to the scene
     const psycheOrbitRadius = 352.5;
     const psycheOrbitDays = 1824.5;
     const psycheOrbitPath = createPsycheOrbitalPath(psycheOrbitRadius, 0xffffff, 1.0);
@@ -617,17 +657,9 @@
     earthOrbitPath.position.set(-330, 0, 0);
     scene.add(earthOrbitPath);
 
+    const earthRadiansPerSecond = (2 * Math.PI) / (earthOrbitDays * 24 * 60 * 60);
+
     let followAsteroid = true;
-
-    function updateLighting() {
-      if (!asteroid || !sunModel) return;
-
-      const sunPos = sunModel.position.clone();
-      const asteroidPos = asteroid.position.clone();
-
-      const lightDirection = new THREE.Vector3().subVectors(sunPos, asteroidPos).normalize();
-      directionalLight.position.copy(lightDirection.multiplyScalar(psycheOrbitRadius * 1.2));
-    }
 
     // Calculate the asteroid's starting position based on a date
 
@@ -645,7 +677,7 @@
     // actual num of days is then modulo'd by 1830 to find which day of the orbit we're in, and then the day/total days
     // is mapped to a point in the orbit
 
-    function getInitialPosition() {
+    function getInitialAsteroidPosition() {
       const startDate = new Date(2023, 8, 13); // epoch date for psyche on wikipedia
       const today = new Date();
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
@@ -656,11 +688,21 @@
     const totalSeconds = psycheOrbitDays * 24 * 60 * 60;
     const radiansPerSecond = (2 * Math.PI) / totalSeconds;
 
-    let originalAngle = getInitialPosition();
+    let originalAngle = getInitialAsteroidPosition();
     let initialAngle = originalAngle;
 
-    let speedIndex = 13;
+    let speedIndex = 14;
     let speedMultiplier = speedOptions[speedIndex];
+
+    function getInitialEarthPosition() {
+      const startDate = new Date(2023, 0, 1); // January 1st as reference
+      const today = new Date();
+      const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      const orbitSegment = daysElapsed % earthOrbitDays;
+      return (orbitSegment / earthOrbitDays) * (Math.PI * 2);
+    }
+    
+    let initialEarthAngle = getInitialEarthPosition();
 
     // Speed slider event listener
     const speedSlider = document.getElementById('speed-slider');
@@ -670,7 +712,7 @@
       speedIndex = parseInt(speedSlider.value, 10);
       speedMultiplier = speedOptions[speedIndex];
       
-      if (speedIndex === 13) {
+      if (speedIndex === 14) {
         // When setting to 0 speed, pause automatically
         pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
         speedDisplay.textContent = "";
@@ -698,10 +740,10 @@
       initialAngle = originalAngle;
       elapsedSeconds = 0;
       speedMultiplier = 0;
-      speedSlider.value = 13;
-      speedIndex = 13;
+      speedSlider.value = 14;
+      speedIndex = 14;
       isPlaying = false;
-      lastSpeedIndex = 13;
+      lastSpeedIndex = 14;
       pausedTime = null;
       speedDisplay.textContent = "";
       referenceDate.setTime(Date.now()); // Reset to current real time
@@ -709,7 +751,25 @@
       updateSimulatedDate();
     });
 
-    function getInitialAngle() {
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    let currentView = 'psyche';
+    
+    function toggleView() {
+      currentView = currentView === 'psyche' ? 'earth' : 'psyche';
+      viewToggleBtn.textContent = `View: ${currentView === 'psyche' ? 'Earth' : 'Psyche'}`;
+
+      if (currentView === 'psyche') {
+        controls.minDistance = 10;
+      } else {
+        controls.minDistance = 50;
+      }
+
+      controls.reset();
+    }
+    
+    viewToggleBtn.addEventListener('click', toggleView);
+
+    function getInitialAsteroidAngle() {
       const startDate = new Date(2020, 0, 1); // reference date
       const now = new Date();
       const msElapsed = now - startDate;
@@ -749,64 +809,85 @@
         asteroid.position.x = -290 + psycheOrbitRadius * Math.cos(-dynamicAngle);
         asteroid.position.z = 0 + psycheOrbitRadius * Math.sin(-dynamicAngle);
 
-        //asteroid.rotation.y = dynamicAngle;
-
         // accurate axis
         const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
         asteroid.rotation.z += simDelta * psycheRotationSpeed;
 
         controls.update();
 
-        if (followAsteroid) {
-          // Calculate the delta between the current target and asteroid's new position
+        if (currentView === 'psyche' && asteroid) {
           const previousTarget = controls.target.clone();
           const newTarget = asteroid.position.clone();
           const targetDelta = newTarget.clone().sub(previousTarget);
-
+          
           // Move the camera by the same delta
           camera.position.add(targetDelta);
 
           // Update the control target to the asteroid
           controls.target.copy(newTarget);
         }
-      }
 
-      // Render with bloom
-      if (bloomComposer && finalComposer) {
-      // First render all objects (layer 0)
+        else if (currentView === 'earth' && earth) {
+          const previousTarget = controls.target.clone();
+          const newTarget = earth.position.clone();
+          const targetDelta = newTarget.clone().sub(previousTarget);
+          
+          // Move the camera by the same delta
+          camera.position.add(targetDelta);
+
+          // Update the control target to the asteroid
+          controls.target.copy(newTarget);
+        }
+      
+      controls.update();
+
+      if (earth) {
+        const earthAngle = initialEarthAngle + elapsedSeconds * earthRadiansPerSecond;
+        
+        earth.position.x = -330 + earthOrbitRadius * Math.cos(-earthAngle);
+        earth.position.z = 0 + earthOrbitRadius * Math.sin(-earthAngle);
+
+        const earthRotationSpeed = (Math.PI * 2) / (24 * 60 * 60);
+        earth.rotation.y += simDelta * earthRotationSpeed;
+      }
+    }
+
+    // Render with bloom
+    if (bloomComposer && finalComposer) {
       camera.layers.set(0);
       renderer.clear();
       finalComposer.render();
-      
-      // Then render sun with bloom (layer 1)
+
       camera.layers.set(0);
       bloomComposer.render();
-      
+        
       camera.layers.set(0);
-    } else {
+    }
+
+    else {
       renderer.render(scene, camera);
     }
-    }
+  }
 
-    animate();
+  animate();
 
-    resetBtn.addEventListener('click', () => {
-      initialPosition = getInitialPosition();
-      elapsedSeconds = 0;  // Reset the time to fix animation desync
-    });
-
-    // Handle window resizing
-    window.addEventListener("resize", () => {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      
-      if (bloomComposer && finalComposer) {
-        bloomComposer.setSize(window.innerWidth, window.innerHeight);
-        finalComposer.setSize(window.innerWidth, window.innerHeight);
-      }
-    });
+  resetBtn.addEventListener('click', () => {
+    initialAsteroidPosition = getInitialAsteroidPosition();
+    elapsedSeconds = 0;
   });
+
+  // Handle window resizing
+  window.addEventListener("resize", () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+      
+    if (bloomComposer && finalComposer) {
+      bloomComposer.setSize(window.innerWidth, window.innerHeight);
+      finalComposer.setSize(window.innerWidth, window.innerHeight);
+    }
+  });
+});
 </script>
 </body>
 </html>
