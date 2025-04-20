@@ -5,159 +5,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Psyche Simulation - Asteroid</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    #container { width: 100vw; height: 100vh; }
-
-    #controls {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      flex-direction: row;
-      gap: 10px;
-      padding: 10px;
-      border-radius: 8px;
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      font-family: 'Lato', monospace;
       color: white;
-      font-family: 'Lato', monospace;
-      flex-wrap: wrap;
-    }
-
-    #speed-slider {
-      width: 300px;
-      font-family: 'Lato', monospace;
-    }
-
-    #fullscreen-btn {
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        z-index: 10;
-        background: #0000;
-        color: #f3f3f4;
-        border: none;
-        border-radius: 5px;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
-    }
-
-    #fullscreen-btn:hover {
-        background-color: #0000;
-        transform: scale(1.1);
-    }
-
-    #fullscreen-btn:active {
-        transform: scale(0.95);
-    }
-
-    #fullscreen-icon {
-        width: 30px;
-        height: 30px;
-        display: block;
-        pointer-events: none;
     }
     
-    #date-display {
-      position: absolute;
-      font-family: 'Lato', monospace;
-      top: 10px;
-      left: 50%;
-      text-align: center;
-      background: rgba(0, 0, 0, 0.5);
-      transform: translateX(-50%);
-      font-size: 24px;
-      color: white;
-      z-index: 10;
+    #container { 
+      width: 100vw; 
+      height: 100vh; 
     }
-
-    #speed-display {
+  
+    #controls,
+    #date-display,
+    #speed-display,
+    #ui-wrapper,
+    #fullscreen-btn,
+    #view-toggle-btn {
       position: absolute;
-      font-family: 'Lato', monospace;
-      bottom: 80px;
-      left: 50%;
-      text-align: center;
-      transform: translateX(-50%);
-      font-size: 18px;
-      color: white;
       z-index: 10;
+      border-radius: 5px;
     }
-
-    #ui-wrapper {
-      position: absolute;
+  
+    #controls {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
       display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 20px;
+      gap: 10px;
+      padding: 10px;
       flex-wrap: wrap;
     }
-
-    #playback-buttons {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
-      align-items: center;
+  
+    #speed-slider {
+      width: 300px;
+      box-shadow: none;
     }
-
-    .circle-btn {
-      background: #0000;
-      color: #f3f3f4;
+  
+    #date-display {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      font-size: 24px;
+      padding: 5px 15px;
+    }
+  
+    #speed-display {
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      font-size: 18px;
+      padding: 5px 15px;
+    }
+  
+    .circle-btn,
+    #fullscreen-btn,
+    #view-toggle-btn {
       border: none;
-      border-radius: 5px;
-      width: 30px;
-      height: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+  
+    .circle-btn {
+      background: transparent;
+      width: 30px;
+      height: 30px;
       padding: 0;
-      cursor: pointer;
-      transition: transform 0.2s;
+    }
+  
+    .circle-btn:hover,
+    #fullscreen-btn:hover {
+      transform: scale(1.1);
+    }
+  
+    .circle-btn:active,
+    #fullscreen-btn:active {
+      transform: scale(0.95);
+    }
+  
+    #fullscreen-btn {
+      bottom: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  
+    #fullscreen-icon {
+      width: 30px;
+      height: 30px;
+      pointer-events: none;
+    }
+  
+    #button-container {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 10px;
     }
 
+    #view-toggle-btn {
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 10px 15px;
+      background: #DB371F;
+      color: white;
+      font-size: 16px;
+    }
+  
+    #view-toggle-btn:hover {
+      background: #9d2715;
+    }
+  
+    #playback-buttons {
+      display: flex;
+      gap: 10px;
+    }
+  
     .playback-icon {
       width: 15px;
       height: 15px;
       pointer-events: none;
     }
-
-    .circle-btn:hover {
-      transform: scale(1.1);
-    }
-
-    .circle-btn:active {
-      transform: scale(0.95);
-    }
-
-    #view-toggle-btn {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
-      background: #DB371F;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 10px 15px;
-      font-family: 'Lato', monospace;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    #view-toggle-btn:hover {
-      background: #9d2715;
+  
+    #ui-wrapper {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
     }
   </style>
 </head>
@@ -234,27 +226,53 @@
         "-1 YEAR", "-9 MONTHS", "-6 MONTHS", "-3 MONTHS", "-1 MONTH",
         "-2 WEEKS", "-1 WEEK", "-1 DAY", "-12 HOURS", "-6 HOURS", "-1 HOUR", "-10 MINUTES", "-5 MINUTES", "-1 MINUTE",
         "0", 
-        "+1 MINUTE", "+5 MINUTES", "+10 MINUTES", "+1 HOUR", "+12 HOURS", "+6 HOURS", "+1 DAY", 
+        "+1 MINUTE", "+5 MINUTES", "+10 MINUTES", "+1 HOUR", "+6 HOURS", "+12 HOURS", "+1 DAY", 
         "+1 WEEK", "+2 WEEKS", "+1 MONTH", "+3 MONTHS", "+6 MONTHS", "+9 MONTHS", "+1 YEAR"
       ];
       return speedLabels[index];
     }
 
     let pausedTime = null;
+    const now = new Date();
+    const minDate = new Date(now);
+    minDate.setFullYear(minDate.getFullYear() - 10);
+    const maxDate = new Date(now);
+    maxDate.setFullYear(maxDate.getFullYear() + 10);
 
     function updateSimulatedDate() {
       let displayDate;
       
       if (speedMultiplier === 0 && pausedTime !== null) {
-        // When paused, show the frozen simulated time
         displayDate = new Date(pausedTime);
       } else if (speedMultiplier === 0) {
-        // When reset, show current real time
         displayDate = new Date();
       } else {
-        // When simulating, show simulated time
         displayDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       }
+
+      // Check if we've hit the limits
+      let hitLimit = false;
+      if (displayDate <= minDate) {
+        displayDate = minDate;
+        hitLimit = true;
+        if (speedMultiplier < 0) {
+          speedSlider.value = 14;
+          speedMultiplier = 0;
+          isPlaying = false;
+          playPauseIcon.src = "play-button-6-128.png";
+        }
+      } else if (displayDate >= maxDate) {
+        displayDate = maxDate;
+        hitLimit = true;
+        if (speedMultiplier > 0) {
+          speedSlider.value = 14;
+          speedMultiplier = 0;
+          isPlaying = false;
+          playPauseIcon.src = "play-button-6-128.png";
+        }
+      }
+
+      updateSpeedDisplay();
 
       const day = String(displayDate.getUTCDate()).padStart(2, '0');
       const month = displayDate.toLocaleString('en-US', {month: 'long', timeZone: 'UTC'}).toUpperCase();
@@ -289,13 +307,6 @@
         speedMultiplier = speedOptions[speedIndex];
         isPlaying = true;
         playPauseIcon.src = "icon-pause-128.png";
-        
-        // If we have a paused time, use it as reference
-        if (pausedTime !== null) {
-          referenceDate.setTime(pausedTime);
-          elapsedSeconds = 0;
-          pausedTime = null;
-        }
       }
       updateSpeedDisplay();
       updateSimulatedDate();
@@ -303,30 +314,57 @@
 
     // Slow down button functionality
     slowDownBtn.addEventListener('click', () => {
-      if (speedIndex > 0) {
-        speedIndex--;
-        speedSlider.value = speedIndex;
-        speedMultiplier = speedOptions[speedIndex];
-        isPlaying = true;
-        updateSpeedDisplay();
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      if (currentDate > minDate) {
+        if (speedIndex > 0) {
+          speedIndex--;
+          speedSlider.value = speedIndex;
+          speedMultiplier = speedOptions[speedIndex];
+          isPlaying = true;
+          playPauseIcon.src = "icon-pause-128.png";
+        }
+      } else {
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
       }
+      updateSpeedDisplay();
     });
 
     // Speed up button functionality
     speedUpBtn.addEventListener('click', () => {
-      if (speedIndex < speedOptions.length - 1) {
-        speedIndex++;
-        speedSlider.value = speedIndex;
-        speedMultiplier = speedOptions[speedIndex];
-        isPlaying = true;
-        updateSpeedDisplay();
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      if (currentDate < maxDate) {
+        if (speedIndex < speedOptions.length - 1) {
+          speedIndex++;
+          speedSlider.value = speedIndex;
+          speedMultiplier = speedOptions[speedIndex];
+          isPlaying = true;
+          playPauseIcon.src = "icon-pause-128.png";
+        }
+      } else {
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
       }
+      updateSpeedDisplay();
     });
 
     function updateSpeedDisplay() {
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      
       if (speedIndex === 14) {
         speedDisplay.textContent = "";
-      } else {
+      }
+      else if (currentDate <= minDate) {
+        speedDisplay.textContent = "MIN DATE REACHED";
+      }
+      else if (currentDate >= maxDate) {
+        speedDisplay.textContent = "MAX DATE REACHED";
+      }
+      else {
         speedDisplay.textContent = getSpeedLabel(speedIndex);
       }
     }
@@ -652,7 +690,7 @@
     scene.add(psycheOrbitPath);
 
     const earthOrbitRadius = 130;
-    const earthOrbitDays = 365;
+    const earthOrbitDays = 365.25;
     const earthOrbitPath = createEarthOrbitalPath(earthOrbitRadius, 0xffffff, 1.0);
     earthOrbitPath.position.set(-330, 0, 0);
     scene.add(earthOrbitPath);
@@ -709,28 +747,39 @@
     const speedDisplay = document.getElementById('speed-display');
 
     speedSlider.addEventListener('input', () => {
-      speedIndex = parseInt(speedSlider.value, 10);
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      const newSpeedIndex = parseInt(speedSlider.value, 10);
+      
+      // Check if moving to this speed would exceed our date limits
+      if ((newSpeedIndex < speedIndex && currentDate <= minDate) || 
+          (newSpeedIndex > speedIndex && currentDate >= maxDate)) {
+        // If we're trying to go beyond limits, just pause
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
+        updateSpeedDisplay();
+        return;
+      }
+      
+      speedIndex = newSpeedIndex;
       speedMultiplier = speedOptions[speedIndex];
       
       if (speedIndex === 14) {
-        // When setting to 0 speed, pause automatically
         pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
-        speedDisplay.textContent = "";
         isPlaying = false;
         playPauseIcon.src = "play-button-6-128.png";
       } else {
-        // When changing to non-zero speed, play automatically
         isPlaying = true;
-        speedDisplay.textContent = getSpeedLabel(speedIndex);
         playPauseIcon.src = "icon-pause-128.png";
         
-        // If we were paused, update referenceDate to the paused time
         if (pausedTime !== null) {
           referenceDate.setTime(pausedTime);
           elapsedSeconds = 0;
           pausedTime = null;
         }
       }
+      updateSpeedDisplay();
       updateSimulatedDate();
     });
 
@@ -771,7 +820,6 @@
 
     function getInitialAsteroidAngle() {
       const startDate = new Date(2020, 0, 1); // reference date
-      const now = new Date();
       const msElapsed = now - startDate;
 
       const hoursElapsed = msElapsed / (1000 * 60 * 60);
@@ -835,7 +883,7 @@
           // Move the camera by the same delta
           camera.position.add(targetDelta);
 
-          // Update the control target to the asteroid
+          // Update the control target to the earth
           controls.target.copy(newTarget);
         }
       
