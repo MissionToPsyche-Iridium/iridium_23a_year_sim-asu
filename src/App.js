@@ -31,9 +31,7 @@ function App() {
           <Route path="/FeedbackForm" element={<FeedbackForm />} />
         </Routes>
       </main>
-      
       <BottomRightLinks />    {/*  Display bottom right links on all pages */}
-      <Footer />    {/*  Display footer on all pages */}
     </Router>
   );
 }
