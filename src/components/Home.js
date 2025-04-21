@@ -77,6 +77,7 @@ const Home = () => {
                   <li>
                     Use the <strong>Overhead View</strong> button to get a bird's eye view of the Earth and Psyche's orbit.
                   </li>
+                  <br />
                   <li>
                     Use the <strong>Hide Orbits</strong> button to toggle the Orbital line visibility.
                   </li>
