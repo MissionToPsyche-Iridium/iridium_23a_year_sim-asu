@@ -63,7 +63,7 @@ const Home = () => {
                   </li>
                   <br />
                   <li>
-                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1828 Earth days</strong>.
+                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1825 Earth days</strong>.
                   </li>
                   <br />
                   <li>
@@ -83,7 +83,7 @@ const Home = () => {
                   </li>
                   <br />
                   <li>
-                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1828 Earth days</strong>.
+                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1825 Earth days</strong>.
                   </li>
                   <br />
                   <li>
