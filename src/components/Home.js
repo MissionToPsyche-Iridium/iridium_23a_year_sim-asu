@@ -55,20 +55,32 @@ const Home = () => {
               <>
                 <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', margin: 0 }}>
                   <li>
-                    The white line hovering over Psyche shows its widest stretch — about <strong>173 miles across</strong>.
+                    16 Psyche orbits the Sun between Mars and Jupiter. It takes around ~5 years (or 1825 days) for Psyche to complete one full orbit around the sun.
                   </li>
                   <br />
                   <li>
-                    Use the <strong>first slider</strong> to watch Psyche complete one full spin. A Psyche day is only <strong>4 hours and 12 minutes</strong> long.
+                    Psyche ranges from 2.5 to 3.3 AUs (Astronomical Units) away from the sun. 1 AU is equal to the distance between Earth and the Sun.
                   </li>
                   <br />
                   <li>
-                    Use the <strong>second slider</strong> to move Psyche along its orbit around the Sun — a journey that takes <strong>1825 Earth days</strong>.
+                    Psyche's day is 6 times shorter than a day on Earth, with one rotation taking 4 hours and 12 minutes.
                   </li>
                   <br />
                   <li>
-                    Click the <strong>"Temperature Map"</strong> button to see how sunlight heats different parts of Psyche as it rotates and orbits.
+                    Use the <strong>bottom slider</strong> to simulate Psyche's (or Earth's) orbit around the sun. Click on the reset button to go back to current time.
                   </li>
+                  <br />
+                  <li>
+                    Use the <strong>View</strong> button to switch to Earth's perspective.
+                  </li>
+                  <br />
+                  <li>
+                    Use the <strong>Overhead View</strong> button to get a bird's eye view of the Earth and Psyche's orbit.
+                  </li>
+                  <li>
+                    Use the <strong>Hide Orbits</strong> button to toggle the Orbital line visibility.
+                  </li>
+                  <br />
                 </ul>
               </>
             ) : (

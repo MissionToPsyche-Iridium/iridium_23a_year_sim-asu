@@ -450,10 +450,11 @@
         camera.position.copy(savedCameraState.position);
         controls.target.copy(savedCameraState.target);
         controls.enableRotate = true;
-        controls.reset();
         camera.fov = savedCameraState.fov;
         camera.updateProjectionMatrix();
         controls.reset();
+        controls.minDistance = 10;
+        controls.maxDistance = 2000;
         controls.update();
         
         // Update the button state
@@ -620,7 +621,7 @@
     // ←—— HERE: add your Psyche label
     const psycheDiv = document.createElement('div');
     psycheDiv.className = 'label';
-    psycheDiv.textContent = 'Psyche';
+    psycheDiv.textContent = '16 Psyche';
     const psycheLabel = new THREE.CSS2DObject(psycheDiv);
     psycheLabel.position.set(0, 10, 0);
     scene.add(psycheLabel);
