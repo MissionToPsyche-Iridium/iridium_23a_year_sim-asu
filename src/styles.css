@@ -13,6 +13,7 @@ html, body {
 html, body, #root {
     height: 100%;
     margin: 0;
+    overflow: hidden;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -176,6 +177,18 @@ footer {
 /* Add hover effect for the Psyche logo */
 .psyche-logo:hover { transform: scale(1.1); }
 
+/* Right logo container */
+.header-right-logo {
+    margin-left: auto; /* Pushes it to the right */
+}
+  
+/* Your logo styles */
+.site-logo {
+    width: 353px; /* Adjust as needed */
+    height: 118px;
+    /* max-height: 60px; /* Keeps it contained within header */
+}
+
 
 .button-image-container { 
     display: flex;
@@ -254,7 +267,7 @@ footer {
   .text-container-wrapper {
     width: 30%;
     margin-top: -1.9rem;
-    max-height: 53vh;
+    max-height: 59vh;
     min-width: 300px;
     max-width: 500px;
     display: flex;
@@ -299,8 +312,9 @@ footer {
   /* iframe fills right side container */
   .iframe-container {
     flex-grow: 1;
-    height: 60vh;
-    max-height: 50vh;
+    height: 80vh;
+    width: 85vh;
+    max-height: 55vh;
     border: 1px solid #f47c33 ;
     max-width: 160vh;
   }

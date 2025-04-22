@@ -10,12 +10,6 @@ const Credits = () => {
               <Helmet>
                 <title>Credits - Psyche Simulation</title>
               </Helmet>
-                <img src={logo} 
-                  alt="Welcome to Psyche Simulation" 
-                  style={{
-                  width: '25%', 
-                  height: 'auto',
-                  }}/>
               
               <h2>The team:</h2>
               <p>Akshay Pasumarthi<br></br>Luka Micevic<br></br>Luz Rodriguez<br></br>Melody Musmacker<br></br>Tanav Jalan</p>

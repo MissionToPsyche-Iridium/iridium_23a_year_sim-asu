@@ -1,6 +1,7 @@
 import React from 'react'; 
 import { NavLink } from 'react-router-dom'; //Navlink to change button class to active button when clicked
-import '../styles.css'; 
+import '../styles.css';
+import logo from './logo.png'; 
 
 
 const Header = () => {
@@ -15,6 +16,15 @@ const Header = () => {
         <NavLink to="/About" className={({ isActive }) => isActive ? "header-button active-button" : "header-button"}>About</NavLink>
         <NavLink to="/SimulationDetails" className={({ isActive }) => isActive ? "header-button active-button" : "header-button"}>Credits</NavLink>
       </div>
+
+      <div className="psyche-1825">
+        <img 
+          src={logo} 
+          alt="Psyche Simulation Logo" 
+          className="site-logo"
+        />
+      </div>
+      
     </header>
   );
 };

@@ -10,14 +10,6 @@ const About = () => {
       <title>About - Psyche Simulation</title>
     </Helmet>
 
-    <div className="about" style={{ textAlign: 'center' }}>
-      <img src={logo} 
-        alt="Welcome to Psyche Simulation" 
-        style={{
-        width: '25%', 
-        height: 'auto',
-        }}
-      />
         <h2>Mission</h2>
         <p>Psyche is both the name of an asteroid orbiting the Sun between Mars and<br>
         </br>Jupiter — and the name of a NASA space mission to visit that asteroid,<br>
@@ -30,7 +22,6 @@ const About = () => {
         </br>the asteroid and studying its properties.<br>
         </br>Once the spacecraft arrives at the asteroid, plans call for it to perform science operations from<br>
         </br>four staging orbits, which become successively closer.</p>
-      </div>
     </main>
   );
 };

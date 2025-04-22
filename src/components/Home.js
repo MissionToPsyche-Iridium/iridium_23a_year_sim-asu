@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';  // Helmet to change page title
 import '../styles.css';
-import logo from './logo.png';
 
 const Home = () => {
   const [activeButton, setActiveButton] = useState('System View');
@@ -28,18 +27,6 @@ const Home = () => {
         <title>Home - Psyche Simulation</title>
       </Helmet>
 
-      <div className="home-page" style={{ textAlign: 'center' }}>
-        <img 
-          src={logo} 
-          alt="Welcome to Psyche Simulation" 
-          style={{
-            width: '30%', 
-            height: 'auto',
-            marginTop: '1rem',
-            marginBottom: '1rem' // Add some space below the image
-          }}
-        />
-      </div>
 
       {/* Simulation layout: side-by-side */}
       <div className="simulation-container">
@@ -81,7 +68,6 @@ const Home = () => {
                   <li>
                     Use the <strong>Hide Orbits</strong> button to toggle the Orbital line visibility.
                   </li>
-                  <br />
                 </ul>
               </>
             ) : (

@@ -872,7 +872,7 @@
     // is mapped to a point in the orbit
 
     function getInitialAsteroidPosition() {
-      const startDate = new Date(2023, 8, 13); // epoch date for psyche on wikipedia
+      const startDate = new Date(2023, 0, 1); // epoch date for psyche on wikipedia
       const today = new Date();
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
       const orbitSegment = daysElapsed % psycheOrbitDays; // get remainder within the 1830-day cycle
