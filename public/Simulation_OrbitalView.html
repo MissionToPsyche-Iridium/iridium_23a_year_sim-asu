@@ -468,6 +468,18 @@
     overheadViewBtn.addEventListener('click', () => {
       if (isOverheadView) {
         resetOverheadView();
+        if (currentView === 'psyche') {
+          currentView = 'psyche';
+          viewToggleBtn.textContent = 'View: Earth';
+          controls.maxDistance = 10;
+          controls.reset();
+        }
+        else if (currentView === 'earth') {
+          currentView = 'psyche';
+          viewToggleBtn.textContent = 'View: Psyche';
+          controls.maxDistance = 50;
+          controls.reset();
+        }
       }
       else {
         // Save current camera state
@@ -484,8 +496,8 @@
         // Look at the Sun
         controls.target.copy(sunPosition);
         controls.enableRotate = false;
-        controls.minDistance = 1700;
-        controls.maxDistance = 1700;
+        controls.minDistance = 2000;
+        controls.maxDistance = 2000;
         camera.fov = 30;
         camera.updateProjectionMatrix();
         controls.update();
@@ -505,7 +517,7 @@
         camera.updateProjectionMatrix();
         controls.reset();
         controls.minDistance = 10;
-        controls.maxDistance = 2000;
+        controls.maxDistance = 1000;
         controls.update();
         
         // Update the button state
@@ -701,7 +713,9 @@
               map: originalMaterial.map,
               depthWrite: true,
               depthTest: true,
-              flatShading: true
+              flatShading: true,
+              //roughness: 0.8,
+              metalness: 0.0001
             });
           }
         });
