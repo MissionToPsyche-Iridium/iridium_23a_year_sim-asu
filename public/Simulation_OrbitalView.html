@@ -389,7 +389,7 @@
 
     // Play/Pause toggle functionality
     playPauseBtn.addEventListener('click', () => {
-      if (isPlaying) {
+      if (isPlaying || speedIndex === 14) {
         // Pause the simulation
         pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
         speedMultiplier = 0;
@@ -513,9 +513,13 @@
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       
       if (speedIndex === 14) {
-        speedDisplay.textContent = "";
+        speedDisplay.style.display = "none";
       }
-      else if (currentDate <= minDate) {
+      else {
+        speedDisplay.style.display = "block";
+      }
+      
+      if (currentDate <= minDate) {
         speedDisplay.textContent = "MIN DATE REACHED";
       }
       else if (currentDate >= maxDate) {
