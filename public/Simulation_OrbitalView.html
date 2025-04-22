@@ -161,6 +161,13 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+
+    #play-pause-btn.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
     .label {
       color: white;
       font-family: 'Lato', monospace;
@@ -169,6 +176,7 @@
       border-radius: 4px;
       pointer-events: none;
     }
+
     :fullscreen #controls,
     :fullscreen #ui-wrapper {
       left: 50% !important;
@@ -325,6 +333,7 @@
 
     let isOverheadView = false;
     let showOrbits = true;
+    let hitLimit = false;
 
     let savedCameraState = {
       position: new THREE.Vector3(),
@@ -344,25 +353,30 @@
       }
 
       // Check if we've hit the limits
-      let hitLimit = false;
       if (displayDate <= minDate) {
         displayDate = minDate;
         hitLimit = true;
-        if (speedMultiplier < 0) {
-          speedSlider.value = 14;
-          speedMultiplier = 0;
-          isPlaying = false;
-          playPauseIcon.src = "play-button-6-128.png";
-        }
-      } else if (displayDate >= maxDate) {
+        referenceDate.setTime(minDate.getTime());
+        elapsedSeconds = 0;
+        pausedTime = minDate.getTime();
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
+      }
+      else if (displayDate >= maxDate) {
         displayDate = maxDate;
         hitLimit = true;
-        if (speedMultiplier > 0) {
-          speedSlider.value = 14;
-          speedMultiplier = 0;
-          isPlaying = false;
-          playPauseIcon.src = "play-button-6-128.png";
-        }
+        referenceDate.setTime(maxDate.getTime());
+        elapsedSeconds = 0;
+        pausedTime = maxDate.getTime();
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
+      }
+      else {
+        hitDateLimit = false;
       }
 
       updateSpeedDisplay();
@@ -389,14 +403,25 @@
 
     // Play/Pause toggle functionality
     playPauseBtn.addEventListener('click', () => {
-      if (isPlaying || speedIndex === 14) {
+      // Do nothing if at neutral speed (index 14)
+      if (speedIndex === 14) {
+        return;
+      }
+
+      if (isPlaying) {
         // Pause the simulation
         pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
         speedMultiplier = 0;
         isPlaying = false;
         playPauseIcon.src = "play-button-6-128.png";
-      } else {
-        // Play the simulation - but keep speed at 0 if slider is at 13
+      }
+      else {
+        // Play the simulation
+        if (pausedTime !== null) {
+          referenceDate.setTime(pausedTime);
+          elapsedSeconds = 0;
+          pausedTime = null;
+        }
         speedMultiplier = speedOptions[speedIndex];
         isPlaying = true;
         playPauseIcon.src = "icon-pause-128.png";
@@ -408,6 +433,7 @@
     // Slow down button functionality
     slowDownBtn.addEventListener('click', () => {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      hitLimit = false;
       if (currentDate > minDate) {
         if (speedIndex > 0) {
           speedIndex--;
@@ -416,7 +442,8 @@
           isPlaying = true;
           playPauseIcon.src = "icon-pause-128.png";
         }
-      } else {
+      }
+      else {
         speedSlider.value = 14;
         speedMultiplier = 0;
         isPlaying = false;
@@ -428,6 +455,7 @@
     // Speed up button functionality
     speedUpBtn.addEventListener('click', () => {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      hitLimit = false;
       if (currentDate < maxDate) {
         if (speedIndex < speedOptions.length - 1) {
           speedIndex++;
@@ -436,7 +464,8 @@
           isPlaying = true;
           playPauseIcon.src = "icon-pause-128.png";
         }
-      } else {
+      }
+      else {
         speedSlider.value = 14;
         speedMultiplier = 0;
         isPlaying = false;
@@ -451,7 +480,8 @@
     overheadViewBtn.addEventListener('click', () => {
       if (isOverheadView) {
         resetOverheadView();
-      } else {
+      }
+      else {
         // Save current camera state
         savedCameraState = {
           position: camera.position.clone(),
@@ -503,7 +533,8 @@
       if (showOrbits) {
         scene.add(psycheOrbitPath);
         scene.add(earthOrbitPath);
-      } else {
+      }
+      else {
         scene.remove(psycheOrbitPath);
         scene.remove(earthOrbitPath);
       }
@@ -554,7 +585,8 @@
             }).catch(err => {
               console.error("Error attempting to enable fullscreen:", err);
             });
-          } else {
+          }
+          else {
             document.exitFullscreen().then(() => {
               fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
             }).catch(err => {
@@ -569,7 +601,8 @@
         document.addEventListener('fullscreenchange', () => {
           if (document.fullscreenElement) {
             fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
-          } else {
+          }
+          else {
             fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
           }
         });
@@ -638,24 +671,18 @@
         const z = 0 + psycheOrbitRadius * Math.sin(-initialAngle);
         asteroid.position.set(x, 0, z);
 
-         
-        
-
         controls.target.set(0, 0, 0);
         controls.update();
 
         // Set the OrbitControls target to the asteroid's group center
         controls.target.set(0, 0, 0);
         controls.update();
-
-        
       },
       undefined,
       (error) => {
         console.error('Error loading asteroid model:', error);
       }
     );
-    // ←—— HERE: add your Psyche label
     const psycheDiv = document.createElement('div');
     psycheDiv.className = 'label';
     psycheDiv.textContent = '16 Psyche';
@@ -703,7 +730,6 @@
 
     // add to scene 
     scene.add(earthLabel);
-
 
     // Create the orbital path
     const createPsycheOrbitalPath = (radius, color = 0xffffff) => {
@@ -940,38 +966,23 @@
     const speedDisplay = document.getElementById('speed-display');
 
     speedSlider.addEventListener('input', () => {
-      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       const newSpeedIndex = parseInt(speedSlider.value, 10);
-      
-      // Check if moving to this speed would exceed our date limits
-      if ((newSpeedIndex < speedIndex && currentDate <= minDate) || 
-          (newSpeedIndex > speedIndex && currentDate >= maxDate)) {
-        // If we're trying to go beyond limits, just pause
-        speedSlider.value = 14;
-        speedMultiplier = 0;
-        isPlaying = false;
-        playPauseIcon.src = "play-button-6-128.png";
-        updateSpeedDisplay();
-        return;
-      }
-      
       speedIndex = newSpeedIndex;
       speedMultiplier = speedOptions[speedIndex];
+      hitLimit = false;
       
-      if (speedIndex === 14) {
-        pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
+      // Toggle button state
+      if (newSpeedIndex === 14) {
+        playPauseBtn.classList.add('disabled');
         isPlaying = false;
         playPauseIcon.src = "play-button-6-128.png";
-      } else {
+      }
+      else {
+        playPauseBtn.classList.remove('disabled');
         isPlaying = true;
         playPauseIcon.src = "icon-pause-128.png";
-        
-        if (pausedTime !== null) {
-          referenceDate.setTime(pausedTime);
-          elapsedSeconds = 0;
-          pausedTime = null;
-        }
       }
+      
       updateSpeedDisplay();
       updateSimulatedDate();
     });
@@ -991,7 +1002,7 @@
       referenceDate.setTime(Date.now()); // Reset to current real time
       playPauseIcon.src = "icon-pause-128.png";
       updateSimulatedDate();
-    });
+    })
 
     const viewToggleBtn = document.getElementById('view-toggle-btn');
     let currentView = 'psyche';
@@ -1003,7 +1014,8 @@
 
       if (currentView === 'psyche') {
         controls.minDistance = 10;
-      } else {
+      }
+      else {
         controls.minDistance = 50;
       }
 
@@ -1028,9 +1040,10 @@
     function animate() {
       requestAnimationFrame(animate);
 
-      const rawDelta = clock.getDelta();         // Real time between frames
-      const simDelta = rawDelta * speedMultiplier; // Simulated time
-      elapsedSeconds += simDelta;
+      let rawDelta = clock.getDelta();
+      let simDelta = hitLimit ? 0 : rawDelta * speedMultiplier;
+      elapsedSeconds += simDelta;      
+
       updateSimulatedDate();
 
       if (asteroid) {
@@ -1096,7 +1109,6 @@
       }
     }
 
-    
     // Render with bloom
     if (bloomComposer && finalComposer) {
       camera.layers.set(0);
@@ -1111,7 +1123,6 @@
 
     else {
       renderer.render(scene, camera);
-      
     }
 
     if ( earth ) {
