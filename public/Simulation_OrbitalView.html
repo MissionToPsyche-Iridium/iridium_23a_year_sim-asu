@@ -352,31 +352,22 @@
         displayDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       }
 
-      // Check if we've hit the limits
-      if (displayDate <= minDate) {
-        displayDate = minDate;
+      // Only check limits if we're actually moving toward them
+      if ((speedMultiplier > 0 && displayDate >= maxDate) || 
+          (speedMultiplier < 0 && displayDate <= minDate)) {
+        displayDate = speedMultiplier > 0 ? maxDate : minDate;
         hitLimit = true;
-        referenceDate.setTime(minDate.getTime());
+        referenceDate.setTime(displayDate.getTime());
         elapsedSeconds = 0;
-        pausedTime = minDate.getTime();
+        pausedTime = displayDate.getTime();
         speedSlider.value = 14;
         speedIndex = 14;
-        isPlaying = false;
-        playPauseIcon.src = "play-button-6-128.png";
-      }
-      else if (displayDate >= maxDate) {
-        displayDate = maxDate;
-        hitLimit = true;
-        referenceDate.setTime(maxDate.getTime());
-        elapsedSeconds = 0;
-        pausedTime = maxDate.getTime();
-        speedSlider.value = 14;
-        speedIndex = 14;
+        speedMultiplier = 0;
         isPlaying = false;
         playPauseIcon.src = "play-button-6-128.png";
       }
       else {
-        hitDateLimit = false;
+        hitLimit = false;
       }
 
       updateSpeedDisplay();
@@ -403,7 +394,6 @@
 
     // Play/Pause toggle functionality
     playPauseBtn.addEventListener('click', () => {
-      // Do nothing if at neutral speed (index 14)
       if (speedIndex === 14) {
         return;
       }
@@ -433,7 +423,6 @@
     // Slow down button functionality
     slowDownBtn.addEventListener('click', () => {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
-      hitLimit = false;
       if (currentDate > minDate) {
         if (speedIndex > 0) {
           speedIndex--;
@@ -455,7 +444,6 @@
     // Speed up button functionality
     speedUpBtn.addEventListener('click', () => {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
-      hitLimit = false;
       if (currentDate < maxDate) {
         if (speedIndex < speedOptions.length - 1) {
           speedIndex++;
@@ -544,7 +532,15 @@
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
       
       if (speedIndex === 14) {
-        speedDisplay.style.display = "none";
+        if (currentDate <= minDate) {
+          speedDisplay.textContent = "MIN DATE REACHED";
+        }
+        else if (currentDate >= maxDate) {
+          speedDisplay.textContent = "MAX DATE REACHED";
+        }
+        else {
+          speedDisplay.style.display = "none";
+        }
       }
       else {
         speedDisplay.style.display = "block";
@@ -969,7 +965,10 @@
       const newSpeedIndex = parseInt(speedSlider.value, 10);
       speedIndex = newSpeedIndex;
       speedMultiplier = speedOptions[speedIndex];
-      hitLimit = false;
+      
+      if (newSpeedIndex !== 14) {
+        hitLimit = false;
+      }
       
       // Toggle button state
       if (newSpeedIndex === 14) {
