@@ -162,12 +162,6 @@
       flex-wrap: wrap;
     }
 
-    #play-pause-btn.disabled {
-      opacity: 0.5;
-      pointer-events: none;
-      cursor: not-allowed;
-    }
-
     .label {
       color: white;
       font-family: 'Lato', monospace;
@@ -296,7 +290,7 @@
       -10 * 60,          // -10 min
       -5 * 60,           // -5 min
       -60,               // -1 min
-      0,
+      1,
       60,               // +1 min
       5 * 60,           // +5 min
       10 * 60,          // +10 min
@@ -385,7 +379,6 @@
 
     // Add play/pause state variables
     let isPlaying = false;
-    let lastSpeedIndex = 14; // Store the last speed before pausing
 
     const playPauseBtn = document.getElementById('play-pause-btn');
     const playPauseIcon = document.getElementById('play-pause-icon');
@@ -394,28 +387,17 @@
 
     // Play/Pause toggle functionality
     playPauseBtn.addEventListener('click', () => {
-      if (speedIndex === 14) {
-        return;
-      }
-
-      if (isPlaying) {
-        // Pause the simulation
+      if (speedMultiplier !== 0) {
+        // Pause
         pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
         speedMultiplier = 0;
-        isPlaying = false;
         playPauseIcon.src = "play-button-6-128.png";
-      }
-      else {
-        // Play the simulation
-        if (pausedTime !== null) {
-          referenceDate.setTime(pausedTime);
-          elapsedSeconds = 0;
-          pausedTime = null;
-        }
+      } else {
         speedMultiplier = speedOptions[speedIndex];
-        isPlaying = true;
+        pausedTime = null;
         playPauseIcon.src = "icon-pause-128.png";
       }
+
       updateSpeedDisplay();
       updateSimulatedDate();
     });
@@ -428,15 +410,16 @@
           speedIndex--;
           speedSlider.value = speedIndex;
           speedMultiplier = speedOptions[speedIndex];
+          updateSpeedDisplay();
           isPlaying = true;
-          playPauseIcon.src = "icon-pause-128.png";
+          playPauseIcon.src = "play-button-6-128.png";
         }
       }
       else {
         speedSlider.value = 14;
         speedMultiplier = 0;
         isPlaying = false;
-        playPauseIcon.src = "play-button-6-128.png";
+        playPauseIcon.src = "icon-pause-128.png";
       }
       updateSpeedDisplay();
     });
@@ -449,6 +432,7 @@
           speedIndex++;
           speedSlider.value = speedIndex;
           speedMultiplier = speedOptions[speedIndex];
+          updateSpeedDisplay();
           isPlaying = true;
           playPauseIcon.src = "icon-pause-128.png";
         }
@@ -457,7 +441,7 @@
         speedSlider.value = 14;
         speedMultiplier = 0;
         isPlaying = false;
-        playPauseIcon.src = "play-button-6-128.png";
+        playPauseIcon.src = "icon-pause-128.png";
       }
       updateSpeedDisplay();
     });
@@ -471,7 +455,7 @@
         if (currentView === 'psyche') {
           currentView = 'psyche';
           viewToggleBtn.textContent = 'View: Earth';
-          controls.maxDistance = 10;
+          controls.maxDistance = 1000;
           controls.reset();
         }
         else if (currentView === 'earth') {
@@ -542,29 +526,20 @@
 
     function updateSpeedDisplay() {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
-      
-      if (speedIndex === 14) {
-        if (currentDate <= minDate) {
-          speedDisplay.textContent = "MIN DATE REACHED";
-        }
-        else if (currentDate >= maxDate) {
-          speedDisplay.textContent = "MAX DATE REACHED";
-        }
-        else {
-          speedDisplay.style.display = "none";
-        }
-      }
+      const isAtCurrentTime = speedIndex === 14 && 
+                            currentDate > minDate && 
+                            currentDate < maxDate;
+      const isAtLimit = (currentDate <= minDate || currentDate >= maxDate) && speedIndex === 14;
+
+      // Handle display text
+      if (isAtLimit) {
+        speedDisplay.textContent = currentDate <= minDate ? "MIN DATE REACHED" : "MAX DATE REACHED";
+      } 
+      else if (speedIndex === 14) {
+        speedDisplay.style.display = "none";
+      } 
       else {
         speedDisplay.style.display = "block";
-      }
-      
-      if (currentDate <= minDate) {
-        speedDisplay.textContent = "MIN DATE REACHED";
-      }
-      else if (currentDate >= maxDate) {
-        speedDisplay.textContent = "MAX DATE REACHED";
-      }
-      else {
         speedDisplay.textContent = getSpeedLabel(speedIndex);
       }
     }
@@ -681,10 +656,6 @@
 
         controls.target.set(0, 0, 0);
         controls.update();
-
-        // Set the OrbitControls target to the asteroid's group center
-        controls.target.set(0, 0, 0);
-        controls.update();
       },
       undefined,
       (error) => {
@@ -714,7 +685,6 @@
               depthWrite: true,
               depthTest: true,
               flatShading: true,
-              //roughness: 0.8,
               metalness: 0.0001
             });
           }
@@ -753,7 +723,7 @@
         linewidth: 1,
         transparent: true,
         depthTest: true,
-        opacity: 0.1
+        opacity: 0.3
       });
 
       // Create the line
@@ -776,7 +746,7 @@
         linewidth: 1,
         transparent: true,
         depthTest: true,
-        opacity: 0.1
+        opacity: 0.3
       });
 
       // Create the line
@@ -945,7 +915,7 @@
     // is mapped to a point in the orbit
 
     function getInitialAsteroidPosition() {
-      const startDate = new Date(2023, 0, 1); // epoch date for psyche on wikipedia
+      const startDate = new Date(2023, 8, 13); // epoch date for psyche on wikipedia
       const today = new Date();
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
       const orbitSegment = daysElapsed % psycheOrbitDays; // get remainder within the 1830-day cycle
@@ -962,7 +932,7 @@
     let speedMultiplier = speedOptions[speedIndex];
 
     function getInitialEarthPosition() {
-      const startDate = new Date(2023, 0, 1); // January 1st as reference
+      const startDate = new Date(1970, 0, 1); // January 1st as reference
       const today = new Date();
       const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
       const orbitSegment = daysElapsed % earthOrbitDays;
@@ -980,23 +950,15 @@
       speedIndex = newSpeedIndex;
       speedMultiplier = speedOptions[speedIndex];
       
-      if (newSpeedIndex !== 14) {
-        hitLimit = false;
-      }
+      updateSpeedDisplay();
       
-      // Toggle button state
-      if (newSpeedIndex === 14) {
-        playPauseBtn.classList.add('disabled');
-        isPlaying = false;
-        playPauseIcon.src = "play-button-6-128.png";
-      }
+      if (speedMultiplier !== 0) {
+        playPauseIcon.src = "icon-pause-128.png";
+      } 
       else {
-        playPauseBtn.classList.remove('disabled');
-        isPlaying = true;
         playPauseIcon.src = "icon-pause-128.png";
       }
       
-      updateSpeedDisplay();
       updateSimulatedDate();
     });
 
@@ -1009,7 +971,6 @@
       speedSlider.value = 14;
       speedIndex = 14;
       isPlaying = false;
-      lastSpeedIndex = 14;
       pausedTime = null;
       speedDisplay.textContent = "";
       referenceDate.setTime(Date.now()); // Reset to current real time
@@ -1159,7 +1120,6 @@
       );
     }
 
-    // then your CSS2DRenderer
     labelRenderer.setSize( window.innerWidth, window.innerHeight );
     labelRenderer.render( scene, camera );
   }

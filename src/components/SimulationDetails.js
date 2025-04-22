@@ -1,7 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';  //Helmet to change page title
-import '../styles.css';
-import logo from './logo.png';  
+import '../styles.css';  
 
 const Credits = () => {
     return (
@@ -10,7 +9,7 @@ const Credits = () => {
               <Helmet>
                 <title>Credits - Psyche Simulation</title>
               </Helmet>
-              
+
               <h2>The team:</h2>
               <p>Akshay Pasumarthi<br></br>Luka Micevic<br></br>Luz Rodriguez<br></br>Melody Musmacker<br></br>Tanav Jalan</p>
               <p></p>
