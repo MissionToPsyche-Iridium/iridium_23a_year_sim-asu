@@ -11,7 +11,7 @@ const Credits = () => {
               </Helmet>
 
               <h2>The team:</h2>
-              <p>Akshay Pasumarthi<br></br>Luka Micevic<br></br>Luz Rodriguez<br></br>Melody Musmacker<br></br>Tanav Jalan</p>
+              <p>Akshay Pasumarthi<br></br>Luka Micevic<br></br>Luz Rodriguez<br></br>Tanav Jalan</p>
               <p></p>
               <h2>Disclaimer:</h2>
               <p style={{ fontSize: '20px' }}><br></br>This work was created in partial fulfillment of Arizona State University Capstone Course “CSE 485/CSE 486″.<br></br>
