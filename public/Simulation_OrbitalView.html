@@ -65,6 +65,10 @@
     .current-time {
       color: #47DA84;
     }
+
+    .limit-text {
+      color: #da4747;
+    }
   
     .circle-btn,
     #fullscreen-btn,
@@ -535,12 +539,18 @@
                             Math.abs(currentDate - realCurrentTime) < 1000;
       const isAtLimit = (currentDate <= minDate || currentDate >= maxDate) && speedIndex === 14;
 
-      speedDisplay.classList.remove('current-time');
+      speedDisplay.classList.remove('current-time', 'limit-text');
 
       // Handle display text
       if (isAtLimit) {
-        speedDisplay.textContent = currentDate <= minDate ? "MIN DATE REACHED" : "MAX DATE REACHED";
-      } 
+        if (currentDate <= minDate) {
+          speedDisplay.textContent = "MIN DATE REACHED";
+        } else {
+          speedDisplay.textContent = "MAX DATE REACHED";
+        }
+        speedDisplay.classList.add('limit-text');
+        speedDisplay.style.display = "block";
+      }
       else if (isAtCurrentTime) {
         speedDisplay.textContent = "● CURRENT TIME";
         speedDisplay.classList.add('current-time');
