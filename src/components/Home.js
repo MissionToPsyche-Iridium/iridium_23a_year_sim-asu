@@ -46,6 +46,10 @@ const Home = () => {
                   </li>
                   <br />
                   <li>
+                    Psyche has an orbital speed of 17.24 km/s. Earth is almost twice as fast in comparison, with an orbital speed of 30 km/s.
+                  </li>
+                  <br />
+                  <li>
                     Psyche ranges from 2.5 to 3.3 AUs (Astronomical Units) away from the sun. 1 AU is equal to the distance between Earth and the Sun.
                   </li>
                   <br />
@@ -75,6 +79,14 @@ const Home = () => {
                 <ul style={{ listStyleType: 'disc', paddingLeft: '1.2rem', margin: 0 }}>
                   <li>
                     The white line hovering over Psyche shows its widest stretch — about <strong>173 miles across</strong>.
+                  </li>
+                  <br />
+                  <li>
+                    Psyche's surface area is 64,000 square miles.
+                  </li>
+                  <br />
+                  <li>
+                    Psyche is composed of rock and metal, with metal composing 30-60% of its volume.
                   </li>
                   <br />
                   <li>
