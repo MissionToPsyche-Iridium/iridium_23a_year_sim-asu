@@ -61,6 +61,10 @@
       font-size: 18px;
       padding: 5px 15px;
     }
+
+    .current-time {
+      color: #47DA84;
+    }
   
     .circle-btn,
     #fullscreen-btn,
@@ -526,15 +530,22 @@
 
     function updateSpeedDisplay() {
       const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      const realCurrentTime = new Date();
       const isAtCurrentTime = speedIndex === 14 && 
-                            currentDate > minDate && 
-                            currentDate < maxDate;
+                            Math.abs(currentDate - realCurrentTime) < 1000;
       const isAtLimit = (currentDate <= minDate || currentDate >= maxDate) && speedIndex === 14;
+
+      speedDisplay.classList.remove('current-time');
 
       // Handle display text
       if (isAtLimit) {
         speedDisplay.textContent = currentDate <= minDate ? "MIN DATE REACHED" : "MAX DATE REACHED";
       } 
+      else if (isAtCurrentTime) {
+        speedDisplay.textContent = "● CURRENT TIME";
+        speedDisplay.classList.add('current-time');
+        speedDisplay.style.display = "block";
+      }
       else if (speedIndex === 14) {
         speedDisplay.style.display = "none";
       } 
@@ -967,16 +978,16 @@
     resetBtn.addEventListener('click', () => {
       initialAngle = originalAngle;
       elapsedSeconds = 0;
-      speedMultiplier = 0;
+      speedMultiplier = 1;
       speedSlider.value = 14;
       speedIndex = 14;
       isPlaying = false;
       pausedTime = null;
-      speedDisplay.textContent = "";
-      referenceDate.setTime(Date.now()); // Reset to current real time
+      referenceDate.setTime(Date.now());
       playPauseIcon.src = "icon-pause-128.png";
       updateSimulatedDate();
-    })
+      updateSpeedDisplay();
+    });
 
     const viewToggleBtn = document.getElementById('view-toggle-btn');
     let currentView = 'psyche';
