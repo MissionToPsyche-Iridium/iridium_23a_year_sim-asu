@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surface View - Asteroid with Modes and Orbital Switch</title>
+    <style>
+      body { margin: 0; overflow: hidden; font-family: 'Lato', monospace; color: white;}
+      #container { width: 100vw; height: 100vh; background-color: black; }
+      #ui {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 10px; 
+        z-index: 10;
+      }
+      #button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        display: flex;
+        gap: 10px; /* Space between buttons */
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #DB371F;
+        color: #f3f3f4;
+        border: none;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s, transform 0.2s;
+      }
+      button:hover {
+        background-color: #9d2715;
+        transform: scale(1.05);
+      }
+      button:active {
+        transform: scale(1);
+      }
+      #ui-left, #ui-right {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 10;
+      }
+
+      #ui-left {
+        left: 10px;
+      }
+
+      #ui-right {
+        right: 10px;
+      }
+      .slider-box {
+        background-color: rgba(0, 0, 0, 0.5); /* black with transparency */
+        padding: 10px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+      }
+      .slider-box label {
+        color: white;
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+      }
+      button.selected {
+        background-color: #9d2715 !important;
+        transform: scale(1);
+        box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+      }
+
+      #fullscreen-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 10;
+        background: #0000;
+        color: #f3f3f4;
+        border: none;
+        border-radius: 5px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+      #fullscreen-btn:hover {
+          background-color: #0000;
+          transform: scale(1.1);
+      }
+
+      #fullscreen-btn:active {
+          transform: scale(0.95);
+      }
+      #fullscreen-icon {
+        width: 30px;   /* change to 32px, 40px, etc. if you want larger */
+        height: 30px;
+        display: block;
+        pointer-events: none;
+      }
+      /* Standard browsers */
+      :fullscreen #ui-left {
+        left: 20px !important;
+        gap: 20px !important; 
+      }
+      :fullscreen #ui-left button {
+        transform: scale(1.2) !important;
+        transform-origin: left center;
+      }
+
+      :fullscreen #ui-right {
+        right: 20px !important;   /* was 10px, now 60px */
+      }
+      :fullscreen #ui-right .slider-box {
+        transform: scale(1.2) !important;
+        transform-origin: right center;
+      }
+
+
+      /* WebKit/Safari */
+      :-webkit-full-screen #ui-left {
+        left: 20px !important;
+        gap: 20px !important; 
+      }
+      :-webkit-full-screen #ui-left button {
+        transform: scale(1.2) !important;
+        transform-origin: left center;
+      }
+
+      :-webkit-full-screen #ui-right {
+        right: 20px !important;
+      }
+      :-webkit-full-screen #ui-right .slider-box {
+        transform: scale(1.2) !important;
+        transform-origin: right center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div> <!-- This is needed for the WebGL renderer -->
+    <div id="label" style="
+      position: absolute;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      pointer-events: none;
+      display: none;
+      z-index: 20;
+    "></div>
+        <div id="ui-left">
+      <button id="normalMode">Reset Camera</button>
+      <button id="tempMap">Temperature Map</button>
+
+    </div>
+
+    <div id="ui-right">
+
+      <div class="slider-box">
+        <input id="axrotSlider" type="range" min="0" max="252" value="0" step="1" style="accent-color: #DB371F;">
+        <label id="axrotLabel">Time: 0h 0m</label>
+        <input id="lightSlider" type="range" min="0" max="1825" value="0" step="1" style="accent-color: #DB371F;">
+        <label id="lightLabel">Earth Days: 0</label>
+      </div>
+    </div>
+    <div id="button-container"></div>
+    <button id="fullscreen-btn" title="Toggle Fullscreen">
+      <img id="fullscreen-icon" src="fullscreen_24dp_E3E3E3.png" alt="Fullscreen Icon">
+    </button>   
+
+    <!-- Import Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+      
+      document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById('container');
+        if (!container) {
+          console.error("Container not found!");
+          return;
+        }
+        // Initialize the scene, camera, and renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Create a group to hold the line and ticks
+        const measureGroup = new THREE.Group();
+
+        // Create measurement line
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const points = [
+          new THREE.Vector3(-1, 0, 1.05),
+          new THREE.Vector3(1, 0, 1.05)
+        ];
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(lineGeometry, lineMaterial);
+        measureGroup.add(line);
+
+        // Tick marks
+        const tickMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const tickLength = 0.2;
+
+        const tickLeftGeometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-1, -tickLength / 2, 1.05),
+          new THREE.Vector3(-1, tickLength / 2, 1.05)
+        ]);
+        const tickRightGeometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(1, -tickLength / 2, 1.05),
+          new THREE.Vector3(1, tickLength / 2, 1.05)
+        ]);
+
+        const tickLeft = new THREE.Line(tickLeftGeometry, tickMaterial);
+        const tickRight = new THREE.Line(tickRightGeometry, tickMaterial);
+        measureGroup.add(tickLeft);
+        measureGroup.add(tickRight);
+
+        // Add the group to the scene
+        scene.add(measureGroup);
+
+        // Fullscreen functionality
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenIcon = document.getElementById('fullscreen-icon');
+
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().then(() => {
+              fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
+            }).catch(err => {
+              console.error("Error attempting to enable fullscreen:", err);
+            });
+          } else {
+            document.exitFullscreen().then(() => {
+              fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
+            }).catch(err => {
+              console.error("Error attempting to exit fullscreen:", err);
+            });
+          }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Also update icon if user exits fullscreen some other way
+        document.addEventListener('fullscreenchange', () => {
+          if (document.fullscreenElement) {
+            fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
+          } else {
+            fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
+          }
+        });
+
+        // Add Ambient Light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambientLight);
+
+        // Add Directional Light for better shadow and directional effect
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        let lightAngle = 0;
+        let lightRadius = 1;
+        directionalLight.position.set(
+          Math.cos(lightAngle) * lightRadius,  
+          0,
+          -Math.sin(lightAngle) * lightRadius
+        );
+        scene.add(directionalLight);
+
+        // Set up camera and controls
+        camera.position.set(0, 2, 5);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = true;
+        controls.autoRotate = false;
+        controls.enablePan = false;
+
+        // Load the asteroid 
+        const loader = new THREE.GLTFLoader();
+        let asteroid = null;
+        let originalMaterial = null;
+        let tempMaterial = null;
+        let isTempMapActive = false;
+
+        // Create a parent group to add the asteroid to, for easier centering
+        const asteroidGroup = new THREE.Group();
+        scene.add(asteroidGroup);
+
+        loader.load(
+          './psycheModelCentered.glb',  
+          (gltf) => {
+            console.log("Asteroid loaded successfully");
+            asteroid = gltf.scene;
+
+            // Colors for temperature map
+            originalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.8, metalness: 0.5 });
+            tempMaterial = new THREE.MeshStandardMaterial({ vertexColors: true });
+
+            // Adjust material to be a darker gray and respond to lighting
+            asteroid.traverse((child) => {
+              if (child.isMesh) {
+                child.material = originalMaterial;
+                const geometry = child.geometry;
+                geometry.computeVertexNormals();
+                const positionAttribute = geometry.attributes.position;
+                const normalAttribute = geometry.attributes.normal;
+                const colors = [];
+                for (let i = 0; i < positionAttribute.count; i++) {
+                  const normal = new THREE.Vector3(
+                    normalAttribute.getX(i),
+                    normalAttribute.getY(i),
+                    normalAttribute.getZ(i)
+                  ).normalize();
+
+                  const lightIntensity = Math.max(normal.dot(directionalLight.position.clone().normalize()), 0);
+                  
+                  const red = lightIntensity;
+                  const blue = 1.0 - lightIntensity;
+                  colors.push(red, 0, blue);
+                }
+                geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+              }
+            });
+
+            const box = new THREE.Box3().setFromObject(asteroid);
+            const center = box.getCenter(new THREE.Vector3());
+            asteroid.position.sub(center);
+
+            asteroidGroup.add(asteroid);
+
+            controls.target.set(0, 0, 0);
+            controls.update();
+          }
+        );
+
+        const tempMapBtn = document.getElementById('tempMap');
+        tempMapBtn.addEventListener('click', () => {
+          if (asteroid) {
+            isTempMapActive = !isTempMapActive;
+
+            asteroid.traverse((child) => {
+              if (child.isMesh) {
+                child.material = isTempMapActive ? tempMaterial : originalMaterial;
+              }
+            });
+
+            // Add/remove 'selected' class to button
+            if (isTempMapActive) {
+              tempMapBtn.classList.add('selected');
+            } else {
+              tempMapBtn.classList.remove('selected');
+            }
+          }
+        });
+
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 5000;
+        const starVertices = [];
+        const axrot = 1;
+        const day_x = 0.0005;
+        const day_y = 0.001;
+
+        for (let i = 0; i < starCount; i++) {
+          const x = (Math.random() - 0.5) * 400;
+          const y = (Math.random() - 0.5) * 400;
+          const z = (Math.random() - 0.5) * 400;
+          starVertices.push(x, y, z);
+        }
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // Light slider event
+        const lightSlider = document.getElementById("lightSlider");
+        const lightLabel = document.getElementById("lightLabel");
+
+        lightSlider.addEventListener("input", () => {
+          const days = parseInt(lightSlider.value);
+          lightLabel.textContent = `Earth Days: ${days}`;
+
+          lightAngle = (days / 1828) * Math.PI * 2;
+
+          directionalLight.position.set(
+            Math.cos(lightAngle) * lightRadius,
+            0,
+            -Math.sin(lightAngle) * lightRadius
+          );
+
+          directionalLight.lookAt(asteroidGroup.position);
+        });
+
+        function updateTemperatureMap() {
+          if (!asteroid) return;
+
+          const lightDirWorld = new THREE.Vector3(
+            Math.cos(lightAngle),
+            0,
+            -Math.sin(lightAngle)
+          ).normalize();
+
+          asteroid.traverse((child) => {
+            if (child.isMesh && child.geometry) {
+              const geometry = child.geometry;
+              const normalAttribute = geometry.attributes.normal;
+              const colors = [];
+
+              const normalMatrix = new THREE.Matrix3().getNormalMatrix(child.matrixWorld); // transforms normal to world space
+
+              for (let i = 0; i < normalAttribute.count; i++) {
+                const normal = new THREE.Vector3(
+                  normalAttribute.getX(i),
+                  normalAttribute.getY(i),
+                  normalAttribute.getZ(i)
+                ).applyMatrix3(normalMatrix).normalize(); // now it's in world space
+
+                let lightIntensity = Math.max(normal.dot(lightDirWorld), 0);
+                lightIntensity = Math.pow(lightIntensity, 2.0); // optional contrast boost
+                colors.push(lightIntensity * 2, 0, 2.0 - lightIntensity * 2);
+              }
+
+              geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+              geometry.attributes.color.needsUpdate = true;
+            }
+          });
+        }
+
+        let autoRotate = false;
+        let rotationSpeed = 0.002;
+        const axrotSlider = document.getElementById("axrotSlider");
+        const axrotLabel = document.getElementById("axrotLabel");
+        const toggleRotationButton = document.getElementById("toggleRotation");
+        axrotSlider.addEventListener("input", () => {
+          const minutes = parseInt(axrotSlider.value);
+          const hours = Math.floor(minutes / 60);
+          const remainingMinutes = minutes % 60;
+
+          axrotLabel.textContent = `Time: ${hours}h ${remainingMinutes}m`;
+
+          if (asteroid) {
+            // Convert full 252 min range to 360° rotation
+            const rotationAngle = -(minutes / 252) * Math.PI * 2;
+            asteroid.rotation.z = rotationAngle;
+            measureGroup.rotation.z = rotationAngle;  // sync the line too
+          }
+          
+        });
+        
+
+
+        // Viewing Modes
+        document.getElementById('normalMode').addEventListener('click', () => setState('normal'));
+
+        let currentState = 'normal';
+
+        function setState(state) {
+          currentState = state;
+
+          if (state === 'normal') {
+            camera.position.set(0, 2, 5);
+            controls.target.set(0, 0, 0);
+            controls.minDistance = 1.7;
+            controls.maxDistance = 2.5;
+            controls.enableRotate = true;
+          }
+          controls.update();
+        }
+
+        setState('normal');
+
+        const label = document.getElementById('label');
+
+        function updateLabelPosition() {
+          const start = measureGroup.children[0].geometry.attributes.position;
+          const p0 = new THREE.Vector3().fromBufferAttribute(start, 0).applyMatrix4(measureGroup.matrixWorld);
+          const p1 = new THREE.Vector3().fromBufferAttribute(start, 1).applyMatrix4(measureGroup.matrixWorld);
+          const midpoint = new THREE.Vector3().addVectors(p0, p1).multiplyScalar(0.5);
+
+          const projected = midpoint.clone().project(camera);
+          const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+
+          label.style.left = `${x}px`;
+          label.style.top = `${y}px`;
+          label.textContent = "280 km / 173 miles";  // Placeholder text
+          label.style.display = "block";
+        }
+
+        // Animation loop
+        function animate() {
+          requestAnimationFrame(animate);
+          if (isTempMapActive) {
+            updateTemperatureMap(); // Now it updates every frame
+          }
+          updateLabelPosition();  // <-- Add this
+          controls.update();
+          renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+        });
+      });
+    </script>
+  </body>
+</html> 

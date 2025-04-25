@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Psyche Simulation - Asteroid</title>
+  <style>
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      font-family: 'Lato', monospace;
+      color: white;
+    }
+    
+    #container { 
+      width: 100vw; 
+      height: 100vh; 
+    }
+  
+    #controls,
+    #date-display,
+    #speed-display,
+    #ui-wrapper,
+    #fullscreen-btn {
+      position: absolute;
+      z-index: 10;
+      border-radius: 5px;
+    }
+  
+    #controls {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      flex-wrap: wrap;
+    }
+  
+    #speed-slider {
+      width: 300px;
+      box-shadow: none;
+    }
+  
+    #date-display {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      font-size: 24px;
+      padding: 5px 15px;
+    }
+  
+    #speed-display {
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      font-size: 18px;
+      padding: 5px 15px;
+    }
+
+    .current-time {
+      color: #47DA84;
+    }
+
+    .limit-text {
+      color: #da4747;
+    }
+  
+    .circle-btn,
+    #fullscreen-btn,
+    #view-toggle-btn {
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  
+    .circle-btn {
+      background: transparent;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+    }
+  
+    .circle-btn:hover,
+    #fullscreen-btn:hover {
+      transform: scale(1.1);
+    }
+  
+    .circle-btn:active,
+    #fullscreen-btn:active {
+      transform: scale(0.95);
+    }
+  
+    #fullscreen-btn {
+      bottom: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  
+    #fullscreen-icon {
+      width: 30px;
+      height: 30px;
+      pointer-events: none;
+    }
+  
+    #button-container {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      left: 10px;
+      border-radius: 8px;
+    }
+
+    #view-toggle-btn,
+    #overhead-view-btn,
+    #toggle-orbit-btn {
+      padding: 10px 20px;
+      background: #1a5abb;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 5px;
+      text-align: center;
+      display: block;
+      margin: 0;
+    }
+
+    #view-toggle-btn:hover,
+    #overhead-view-btn:hover,
+    #toggle-orbit-btn:hover {
+      background: #113a77;
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    #playback-buttons {
+      display: flex;
+      gap: 10px;
+    }
+  
+    .playback-icon {
+      width: 15px;
+      height: 15px;
+      pointer-events: none;
+    }
+  
+    #ui-wrapper {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .label {
+      color: white;
+      font-family: 'Lato', monospace;
+      padding: 2px 6px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    :fullscreen #controls,
+    :fullscreen #ui-wrapper {
+      left: 50% !important;
+      transform: translateX(-50%) scale(1.2) !important;
+      transform-origin: center bottom;
+    }
+
+    :fullscreen #date-display,
+    :fullscreen #speed-display {
+      transform: translateX(-50%) scale(1.4) !important;
+      transform-origin: center center;
+      font-size: 28px;
+      padding: 8px 20px;
+    }
+
+    :fullscreen #button-container {
+      top: 45% !important;           
+      left: 20px !important;
+      transform: translateY(-50%) scale(1.2) !important;
+      transform-origin: top left;
+    }
+
+    :-webkit-full-screen #controls,
+    :-webkit-full-screen #ui-wrapper {
+      left: 50% !important;
+      transform: translateX(-50%) scale(1.2) !important;
+      transform-origin: center bottom;
+    }
+
+    :-webkit-full-screen #button-container {
+      top: 45% !important;               
+      left: 20px !important;
+      transform: translateY(-50%) scale(1.2) !important;
+      transform-origin: top left;
+    }
+
+    :-webkit-full-screen #date-display,
+    :-webkit-full-screen #speed-display {
+      transform: translateX(-50%) scale(1.4) !important;
+      transform-origin: center center;
+      font-size: 28px;
+      padding: 8px 20px;
+    }
+
+    :fullscreen #date-display {
+      top: 20px !important;
+    }
+
+    :fullscreen #speed-display {
+      bottom: 100px !important;
+      font-size: 24px !important;
+    }
+
+    :-webkit-full-screen #date-display {
+      top: 20px !important;
+    }
+
+    :-webkit-full-screen #speed-display {
+      bottom: 100px !important;
+      font-size: 24px !important;
+    }
+  </style>
+</head>
+<body>
+<div id="container"></div>
+<div id="date-display"></div>
+<div id="speed-display"></div>
+<div id="button-container">
+  <button id="view-toggle-btn" title="Toggle View">View: Earth</button>
+  <button id="overhead-view-btn" title="Toggle Overhead View">Overhead View</button>
+  <button id="toggle-orbit-btn" title="Toggle Orbit Visibility">Hide Orbits</button>
+</div>
+<div id="ui-wrapper">
+  <div id="controls">
+    <input id="speed-slider" type="range" min="0" max="28" step="1" value="14">
+  </div>
+  <div id="playback-buttons">
+    <button id="slow-down-btn" class="circle-btn"><img class="playback-icon" src="fast-rewind-1-128.png"></button>
+    <button id="play-pause-btn" class="circle-btn"><img class="playback-icon" id="play-pause-icon" src="icon-pause-128.png"></button>
+    <button id="reset-btn" class="circle-btn"><img class="playback-icon" src="reset-40-128.png"></button>
+    <button id="speed-up-btn" class="circle-btn"><img class="playback-icon" src="fast-forward-9-128.png"></button>
+  </div>
+</div>
+
+<button id="fullscreen-btn" title="Toggle Fullscreen">
+  <img id="fullscreen-icon" src="fullscreen_24dp_E3E3E3.png" alt="Fullscreen Icon">
+</button>
+  
+<!-- Import Three.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const referenceDate = new Date();
+    const clock = new THREE.Clock();
+    const speedOptions = [
+      -60 * 60 * 24 * 365, // -1 year
+      -60 * 60 * 24 * 30 * 9,  // -9 months
+      -60 * 60 * 24 * 30 * 6,  // -6 months
+      -60 * 60 * 24 * 30 * 3,      // -3 months
+      -60 * 60 * 24 * 30,      // -1 month
+      -60 * 60 * 24 * 7 * 2, // -2 weeks
+      -60 * 60 * 24 * 7, // -1 week
+      -60 * 60 * 24,     // -1 day
+      -12 * 60 * 60,     // -12 hr
+      -6 * 60 * 60,      // -6 hr
+      -60 * 60,          // -1 hr
+      -10 * 60,          // -10 min
+      -5 * 60,           // -5 min
+      -60,               // -1 min
+      1,
+      60,               // +1 min
+      5 * 60,           // +5 min
+      10 * 60,          // +10 min
+      60 * 60,          // +1 hr
+      6 * 60 * 60,      // +6 hr
+      12 * 60 * 60,     // +12 hr
+      60 * 60 * 24,     // +1 day
+      60 * 60 * 24 * 7, // +1 week
+      60 * 60 * 24 * 7 * 2, // +2 weeks
+      60 * 60 * 24 * 30,      // +1 month
+      60 * 60 * 24 * 30 * 3,      // +3 months
+      60 * 60 * 24 * 30 * 6,  // +6 months
+      60 * 60 * 24 * 30 * 9,  // +9 months
+      60 * 60 * 24 * 365,     // +1 year
+    ];
+
+    function getSpeedLabel(index) {
+      const speedLabels = [
+        "-1 YEAR", "-9 MONTHS", "-6 MONTHS", "-3 MONTHS", "-1 MONTH",
+        "-2 WEEKS", "-1 WEEK", "-1 DAY", "-12 HOURS", "-6 HOURS", "-1 HOUR", "-10 MINUTES", "-5 MINUTES", "-1 MINUTE",
+        "0", 
+        "+1 MINUTE", "+5 MINUTES", "+10 MINUTES", "+1 HOUR", "+6 HOURS", "+12 HOURS", "+1 DAY", 
+        "+1 WEEK", "+2 WEEKS", "+1 MONTH", "+3 MONTHS", "+6 MONTHS", "+9 MONTHS", "+1 YEAR"
+      ];
+      return speedLabels[index];
+    }
+
+    let pausedTime = null;
+    const now = new Date();
+    const minDate = new Date(now);
+    minDate.setFullYear(minDate.getFullYear() - 10);
+    const maxDate = new Date(now);
+    maxDate.setFullYear(maxDate.getFullYear() + 10);
+
+    let isOverheadView = false;
+    let showOrbits = true;
+    let hitLimit = false;
+
+    let savedCameraState = {
+      position: new THREE.Vector3(),
+      target: new THREE.Vector3(),
+      fov: 25
+    };
+
+    function updateSimulatedDate() {
+      let displayDate;
+      
+      if (speedMultiplier === 0 && pausedTime !== null) {
+        displayDate = new Date(pausedTime);
+      } else if (speedMultiplier === 0) {
+        displayDate = new Date();
+      } else {
+        displayDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      }
+
+      // Only check limits if we're actually moving toward them
+      if ((speedMultiplier > 0 && displayDate >= maxDate) || 
+          (speedMultiplier < 0 && displayDate <= minDate)) {
+        displayDate = speedMultiplier > 0 ? maxDate : minDate;
+        hitLimit = true;
+        referenceDate.setTime(displayDate.getTime());
+        elapsedSeconds = 0;
+        pausedTime = displayDate.getTime();
+        speedSlider.value = 14;
+        speedIndex = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "play-button-6-128.png";
+      }
+      else {
+        hitLimit = false;
+      }
+
+      updateSpeedDisplay();
+
+      const day = String(displayDate.getUTCDate()).padStart(2, '0');
+      const month = displayDate.toLocaleString('en-US', {month: 'long', timeZone: 'UTC'}).toUpperCase();
+      const year = displayDate.getUTCFullYear();
+      const hours = String(displayDate.getUTCHours()).padStart(2, '0');
+      const minutes = String(displayDate.getUTCMinutes()).padStart(2, '0');
+      const seconds = String(displayDate.getUTCSeconds()).padStart(2, '0');
+
+      document.getElementById('date-display').innerHTML =
+        `${day} ${month} ${year}<br>${hours}:${minutes}:${seconds}`;
+    }
+
+    // Add play/pause state variables
+    let isPlaying = false;
+
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const playPauseIcon = document.getElementById('play-pause-icon');
+    const slowDownBtn = document.getElementById('slow-down-btn');
+    const speedUpBtn = document.getElementById('speed-up-btn');
+
+    // Play/Pause toggle functionality
+    playPauseBtn.addEventListener('click', () => {
+      if (speedMultiplier !== 0) {
+        // Pause
+        pausedTime = referenceDate.getTime() + elapsedSeconds * 1000;
+        speedMultiplier = 0;
+        playPauseIcon.src = "play-button-6-128.png";
+      } else {
+        speedMultiplier = speedOptions[speedIndex];
+        pausedTime = null;
+        playPauseIcon.src = "icon-pause-128.png";
+      }
+
+      updateSpeedDisplay();
+      updateSimulatedDate();
+    });
+
+    // Slow down button functionality
+    slowDownBtn.addEventListener('click', () => {
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      if (currentDate > minDate) {
+        if (speedIndex > 0) {
+          speedIndex--;
+          speedSlider.value = speedIndex;
+          speedMultiplier = speedOptions[speedIndex];
+          updateSpeedDisplay();
+          isPlaying = true;
+          playPauseIcon.src = "play-button-6-128.png";
+        }
+      }
+      else {
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "icon-pause-128.png";
+      }
+      updateSpeedDisplay();
+    });
+
+    // Speed up button functionality
+    speedUpBtn.addEventListener('click', () => {
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      if (currentDate < maxDate) {
+        if (speedIndex < speedOptions.length - 1) {
+          speedIndex++;
+          speedSlider.value = speedIndex;
+          speedMultiplier = speedOptions[speedIndex];
+          updateSpeedDisplay();
+          isPlaying = true;
+          playPauseIcon.src = "icon-pause-128.png";
+        }
+      }
+      else {
+        speedSlider.value = 14;
+        speedMultiplier = 0;
+        isPlaying = false;
+        playPauseIcon.src = "icon-pause-128.png";
+      }
+      updateSpeedDisplay();
+    });
+
+    const overheadViewBtn = document.getElementById('overhead-view-btn');
+    const toggleOrbitBtn = document.getElementById('toggle-orbit-btn');
+
+    overheadViewBtn.addEventListener('click', () => {
+      if (isOverheadView) {
+        resetOverheadView();
+        if (currentView === 'psyche') {
+          currentView = 'psyche';
+          viewToggleBtn.textContent = 'View: Earth';
+          controls.maxDistance = 1000;
+          controls.reset();
+        }
+        else if (currentView === 'earth') {
+          currentView = 'psyche';
+          viewToggleBtn.textContent = 'View: Psyche';
+          controls.maxDistance = 50;
+          controls.reset();
+        }
+      }
+      else {
+        // Save current camera state
+        savedCameraState = {
+          position: camera.position.clone(),
+          target: controls.target.clone(),
+          fov: camera.fov
+        };
+
+        // Set camera position above the Sun
+        const sunPosition = new THREE.Vector3(-330, 0, 0);
+        camera.position.set(sunPosition.x, sunPosition.y + 1700, sunPosition.z);
+        
+        // Look at the Sun
+        controls.target.copy(sunPosition);
+        controls.enableRotate = false;
+        controls.minDistance = 2000;
+        controls.maxDistance = 2000;
+        camera.fov = 30;
+        camera.updateProjectionMatrix();
+        controls.update();
+        
+        // Update the button state
+        isOverheadView = true;
+        overheadViewBtn.textContent = "Normal View";
+      }
+    });
+
+    function resetOverheadView() {
+      if (isOverheadView) {
+        camera.position.copy(savedCameraState.position);
+        controls.target.copy(savedCameraState.target);
+        controls.enableRotate = true;
+        camera.fov = savedCameraState.fov;
+        camera.updateProjectionMatrix();
+        controls.reset();
+        controls.minDistance = 10;
+        controls.maxDistance = 1000;
+        controls.update();
+        
+        // Update the button state
+        isOverheadView = false;
+        overheadViewBtn.textContent = "Overhead View";
+      }
+    }
+
+    toggleOrbitBtn.addEventListener('click', () => {
+      showOrbits = !showOrbits;
+      toggleOrbitBtn.textContent = showOrbits ? "Hide Orbits" : "Show Orbits";
+      
+      if (showOrbits) {
+        scene.add(psycheOrbitPath);
+        scene.add(earthOrbitPath);
+      }
+      else {
+        scene.remove(psycheOrbitPath);
+        scene.remove(earthOrbitPath);
+      }
+    });
+
+    function updateSpeedDisplay() {
+      const currentDate = new Date(referenceDate.getTime() + elapsedSeconds * 1000);
+      const realCurrentTime = new Date();
+      const isAtCurrentTime = speedIndex === 14 && 
+                            Math.abs(currentDate - realCurrentTime) < 1000;
+      const isAtLimit = (currentDate <= minDate || currentDate >= maxDate) && speedIndex === 14;
+
+      speedDisplay.classList.remove('current-time', 'limit-text');
+
+      // Handle display text
+      if (isAtLimit) {
+        if (currentDate <= minDate) {
+          speedDisplay.textContent = "MIN DATE REACHED";
+        } else {
+          speedDisplay.textContent = "MAX DATE REACHED";
+        }
+        speedDisplay.classList.add('limit-text');
+        speedDisplay.style.display = "block";
+      }
+      else if (isAtCurrentTime) {
+        speedDisplay.textContent = "● CURRENT TIME";
+        speedDisplay.classList.add('current-time');
+        speedDisplay.style.display = "block";
+      }
+      else if (speedIndex === 14) {
+        speedDisplay.style.display = "none";
+      } 
+      else {
+        speedDisplay.style.display = "block";
+        speedDisplay.textContent = getSpeedLabel(speedIndex);
+      }
+    }
+
+    // Add scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 10000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('container').appendChild(renderer.domElement);
+    const labelRenderer = new THREE.CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
+
+    // Fullscreen functionality
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenIcon = document.getElementById('fullscreen-icon');
+
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().then(() => {
+              fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
+            }).catch(err => {
+              console.error("Error attempting to enable fullscreen:", err);
+            });
+          }
+          else {
+            document.exitFullscreen().then(() => {
+              fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
+            }).catch(err => {
+              console.error("Error attempting to exit fullscreen:", err);
+            });
+          }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Also update icon if user exits fullscreen some other way
+        document.addEventListener('fullscreenchange', () => {
+          if (document.fullscreenElement) {
+            fullscreenIcon.src = "fullscreen_exit_24dp_E3E3E3.png";
+          }
+          else {
+            fullscreenIcon.src = "fullscreen_24dp_E3E3E3.png";
+          }
+        });
+
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.7);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 0.6);
+    pointLight.position.set(10, -10, 5);
+    scene.add(pointLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.1);
+    directionalLight.position.set(-330, 0, 0);
+    scene.add(directionalLight);
+
+    // Set camera center
+    camera.position.z = 0;
+
+    // Camera controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+    controls.enablePan = false;
+
+    // Limit how zoomed out and zoomed in orbital view can be
+    controls.minDistance = 10;
+    controls.maxDistance = 1000;
+
+    // Load the asteroid asynchronously using GLTFLoader
+    const loader = new THREE.GLTFLoader();
+    let asteroid = null;
+
+    // Create a parent group to add the asteroid to, for easier centering
+    const asteroidGroup = new THREE.Group();
+    scene.add(asteroidGroup);
+
+    loader.load(
+      './psycheModelCentered.glb',
+      (gltf) => {
+        asteroid = gltf.scene;
+
+        // Adjust material to be a darker gray and respond to lighting
+        asteroid.traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0x808080,
+              roughness: 0.8,
+              metalness: 0.3,
+              depthWrite: true,
+              depthTest: true,
+              flatShading: true
+            });
+          }
+        });
+
+        // Compute the bounding box to center the asteroid
+        const box = new THREE.Box3().setFromObject(asteroid);
+        const center = box.getCenter(new THREE.Vector3());
+        asteroid.position.sub(center);  // Offset the asteroid to center it at (0, 0, 0)
+
+        // Add the asteroid to the parent group
+        asteroid.renderOrder = 1;
+        asteroidGroup.add(asteroid);
+
+        const x = -290 + psycheOrbitRadius * Math.cos(-initialAngle);
+        const z = 0 + psycheOrbitRadius * Math.sin(-initialAngle);
+        asteroid.position.set(x, 0, z);
+
+        controls.target.set(0, 0, 0);
+        controls.update();
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading asteroid model:', error);
+      }
+    );
+    const psycheDiv = document.createElement('div');
+    psycheDiv.className = 'label';
+    psycheDiv.textContent = '16 Psyche';
+    const psycheLabel = new THREE.CSS2DObject(psycheDiv);
+    psycheLabel.position.set(0, 10, 0);
+    scene.add(psycheLabel);
+
+    let earth = null;
+
+    loader.load(
+      './Earth.glb',
+      (gltf) => {
+        earth = gltf.scene;
+        console.log('Earth model loaded:', earth);
+
+        earth.traverse((child) => {
+          if (child.isMesh) {
+            const originalMaterial = child.material;
+            child.material = new THREE.MeshStandardMaterial({
+              map: originalMaterial.map,
+              depthWrite: true,
+              depthTest: true,
+              flatShading: true,
+              metalness: 0.0001
+            });
+          }
+        });
+
+        earth.position.set(-200, 0, 0);
+        earth.scale.set(0.0155, 0.0155, 0.0155);
+
+        scene.add(earth);
+
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading Earth model:', error);
+      }
+    );
+
+    // Create Earth label 
+    const earthDiv = document.createElement('div');
+    earthDiv.className = 'label';
+    earthDiv.textContent = 'Earth';
+    const earthLabel = new THREE.CSS2DObject(earthDiv);
+
+    // add to scene 
+    scene.add(earthLabel);
+
+    // Create the orbital path
+    const createPsycheOrbitalPath = (radius, color = 0xffffff) => {
+      const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI);
+
+      const points = curve.getPoints(1024);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      
+      const material = new THREE.LineBasicMaterial({
+        color: color,
+        linewidth: 1,
+        transparent: true,
+        depthTest: true,
+        opacity: 0.3
+      });
+
+      // Create the line
+      const orbitLine = new THREE.Line(geometry, material);
+      orbitLine.rotation.x = Math.PI / 2; // Rotate to be horizontal
+      orbitLine.position.set(-290, 0, 0); // Match sun position
+      
+      return orbitLine;
+    };
+
+    // Create the orbital path
+    const createEarthOrbitalPath = (radius, color = 0xffffff) => {
+      const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, 2 * Math.PI);
+
+      const points = curve.getPoints(1024);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      
+      const material = new THREE.LineBasicMaterial({
+        color: color,
+        linewidth: 1,
+        transparent: true,
+        depthTest: true,
+        opacity: 0.3
+      });
+
+      // Create the line
+      const orbitLine = new THREE.Line(geometry, material);
+      orbitLine.rotation.x = Math.PI / 2; // Rotate to be horizontal
+      orbitLine.position.set(-100, 0, 0); // Match earth position
+      
+      return orbitLine;
+    };
+
+    // Star field
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 5000;
+    const starVertices = [];
+    const time = 1;
+    const day_x = 0.005;
+    const day_y = 0.001;
+
+    for (let i = 0; i < starCount; i++) {
+      const x = (Math.random() - 0.5) * 5000;
+      const y = (Math.random() - 0.5) * 5000;
+      const z = (Math.random() - 0.5) * 5000;
+      starVertices.push(x, y, z);
+    }
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+
+    let bloomComposer, finalComposer;
+    let bloomLayer;
+
+    function setupBloom() {
+      const bloomParams = {
+        resolutionScale: 0.5,
+        exposure: 1,
+        bloomStrength: 1,
+        bloomThreshold: 0.4,
+        bloomRadius: 0.5
+      };
+      
+      const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(
+          window.innerWidth * bloomParams.resolutionScale,
+          window.innerHeight * bloomParams.resolutionScale
+        ),
+        bloomParams.bloomStrength,
+        bloomParams.bloomRadius,
+        bloomParams.bloomThreshold
+      );
+
+      const renderScene = new THREE.RenderPass(scene, camera);
+      
+      // Bloom composer (only renders bloom layer)
+      bloomComposer = new THREE.EffectComposer(renderer);
+      bloomComposer.renderToScreen = false;
+      bloomComposer.addPass(renderScene);
+      bloomComposer.addPass(bloomPass);
+
+      // Final composer (renders everything)
+      finalComposer = new THREE.EffectComposer(renderer);
+      finalComposer.addPass(renderScene);
+      
+      // Mix bloom with original scene
+      const mixPass = new THREE.ShaderPass(
+        new THREE.ShaderMaterial({
+          uniforms: {
+            baseTexture: { value: null },
+            bloomTexture: { value: bloomComposer.renderTarget2.texture },
+            intensity: { value: 0.8 }
+          },
+          vertexShader: `
+            varying vec2 vUv;
+            void main() {
+              vUv = uv;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform sampler2D baseTexture;
+            uniform sampler2D bloomTexture;
+            uniform float intensity;
+            varying vec2 vUv;
+            
+            void main() {
+              vec4 baseColor = texture2D(baseTexture, vUv);
+              vec4 bloomColor = texture2D(bloomTexture, vUv);
+              gl_FragColor = baseColor + bloomColor * intensity;
+            }
+          `,
+          defines: {}
+        }), 
+        "baseTexture"
+      );
+      mixPass.needsSwap = true;
+      mixPass.renderToScreen = true;
+      
+      finalComposer.addPass(mixPass);
+    }
+
+    let sunModel = null;
+    loader.load(
+      './sun.glb',
+      (gltf) => {
+        sunModel = gltf.scene;
+        console.log('Sun model loaded:', sunModel);
+
+        sunModel.position.set(-330, 0, 0);
+        sunModel.scale.set(0.155, 0.155, 0.155);
+        
+        sunModel.traverse((child) => {
+          if (child.isMesh) {
+            child.layers.enable(1);
+            child.material = new THREE.MeshBasicMaterial({
+              color: 0xFDB813,
+              toneMapped: false,
+              depthWrite: true,
+              depthTest: true,
+              transparent: false,
+              opacity: 0.9
+            });
+          }
+        });
+
+        sunModel.renderOrder = -1;
+        scene.add(sunModel);
+        setupBloom();
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading sun model:', error);
+      }
+    );
+
+    // Add orbital paths to the scene
+    const psycheOrbitRadius = 352.5;
+    const psycheOrbitDays = 1824.5;
+    const psycheOrbitPath = createPsycheOrbitalPath(psycheOrbitRadius, 0xffffff, 1.0);
+    psycheOrbitPath.position.set(-290, 0, 0); // Match the sun's position
+    scene.add(psycheOrbitPath);
+
+    const earthOrbitRadius = 130;
+    const earthOrbitDays = 365.25;
+    const earthOrbitPath = createEarthOrbitalPath(earthOrbitRadius, 0xffffff, 1.0);
+    earthOrbitPath.position.set(-330, 0, 0);
+    scene.add(earthOrbitPath);
+
+    const earthRadiansPerSecond = (2 * Math.PI) / (earthOrbitDays * 24 * 60 * 60);
+
+    let followAsteroid = true;
+
+    // Calculate the asteroid's starting position based on a date
+
+    // my plan here is to split up the orbit into 1830 segments (it takes 1830 days to do a full orbit)
+    // ive yet to determine where and when the orbit actually starts and ends, and that will be an easy fix for when i *do* determine it
+    // as i can just change the startDate value
+    //
+    // but what's happening here is that i'm taking Jan 1 2020 as a reference date for when the orbit began
+    // since the value of current day will always be greater than the start date, it is easy to compute at which point of the orbit the
+    // asteroid is currently at using the math below
+    //
+    // the difference between today and the startDate is divided by the number of milliseconds in a day
+    // since the value of today - startDate is in milliseconds, dividing it by (1000 * 60 * 60 * 24) gives us the actual number of days
+    //
+    // actual num of days is then modulo'd by 1830 to find which day of the orbit we're in, and then the day/total days
+    // is mapped to a point in the orbit
+
+    function getInitialAsteroidPosition() {
+      const startDate = new Date(2023, 8, 13); // epoch date for psyche on wikipedia
+      const today = new Date();
+      const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)); // days since reference date
+      const orbitSegment = daysElapsed % psycheOrbitDays; // get remainder within the 1830-day cycle
+      return (orbitSegment / psycheOrbitDays) * (Math.PI * 2); // convert to radians (full circle = 2π)
+    }
+
+    const totalSeconds = psycheOrbitDays * 24 * 60 * 60;
+    const radiansPerSecond = (2 * Math.PI) / totalSeconds;
+
+    let originalAngle = getInitialAsteroidPosition();
+    let initialAngle = originalAngle;
+
+    let speedIndex = 14;
+    let speedMultiplier = speedOptions[speedIndex];
+
+    function getInitialEarthPosition() {
+      const startDate = new Date(1970, 0, 1); // January 1st as reference
+      const today = new Date();
+      const daysElapsed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      const orbitSegment = daysElapsed % earthOrbitDays;
+      return (orbitSegment / earthOrbitDays) * (Math.PI * 2);
+    }
+    
+    let initialEarthAngle = getInitialEarthPosition();
+
+    // Speed slider event listener
+    const speedSlider = document.getElementById('speed-slider');
+    const speedDisplay = document.getElementById('speed-display');
+
+    speedSlider.addEventListener('input', () => {
+      const newSpeedIndex = parseInt(speedSlider.value, 10);
+      speedIndex = newSpeedIndex;
+      speedMultiplier = speedOptions[speedIndex];
+      
+      updateSpeedDisplay();
+      
+      if (speedMultiplier !== 0) {
+        playPauseIcon.src = "icon-pause-128.png";
+      } 
+      else {
+        playPauseIcon.src = "icon-pause-128.png";
+      }
+      
+      updateSimulatedDate();
+    });
+
+    // Reset button event listener
+    const resetBtn = document.getElementById('reset-btn');
+    resetBtn.addEventListener('click', () => {
+      initialAngle = originalAngle;
+      elapsedSeconds = 0;
+      speedMultiplier = 1;
+      speedSlider.value = 14;
+      speedIndex = 14;
+      isPlaying = false;
+      pausedTime = null;
+      referenceDate.setTime(Date.now());
+      playPauseIcon.src = "icon-pause-128.png";
+      updateSimulatedDate();
+      updateSpeedDisplay();
+    });
+
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    let currentView = 'psyche';
+    
+    function toggleView() {
+      resetOverheadView();
+      currentView = currentView === 'psyche' ? 'earth' : 'psyche';
+      viewToggleBtn.textContent = `View: ${currentView === 'psyche' ? 'Earth' : 'Psyche'}`;
+
+      if (currentView === 'psyche') {
+        controls.minDistance = 10;
+      }
+      else {
+        controls.minDistance = 50;
+      }
+
+      controls.reset();
+    }
+    
+    viewToggleBtn.addEventListener('click', toggleView);
+
+    function getInitialAsteroidAngle() {
+      const startDate = new Date(2020, 0, 1); // reference date
+      const msElapsed = now - startDate;
+
+      const hoursElapsed = msElapsed / (1000 * 60 * 60);
+      const rotationsElapsed = hoursElapsed / 4.2;
+      const initialAngle = (rotationsElapsed % 1) * (Math.PI * 2); // map to 0 - 2pi range
+
+      return initialAngle;
+    }
+
+    let elapsedSeconds = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      let rawDelta = clock.getDelta();
+      let simDelta = hitLimit ? 0 : rawDelta * speedMultiplier;
+      elapsedSeconds += simDelta;      
+
+      updateSimulatedDate();
+
+      if (asteroid) {
+
+        // the math is a little arbitrary
+        // psyche is 2.5 to 3.3 astronomical units away from the sun so i set the radius of the orbit as 351 
+        // (the sun is 61*61*61, and the average distance between the farthest and nearest points of psyche's distance from the sun is 290 (330+250/2))
+        // 
+        // the sun's position is set to -330, so it's not completely centered in the orbit radius
+        // this makes the furthest point between the sun and psyche 3.3 AUs, and the closest point 2.5 AUs, and the sun in between
+        // ensures the distance is accurate as its size is accounted for
+
+        // and then i just calculated the circumference of the orbit itself as 2pi * 290 and then the orbital speed as just the
+        // circumference / the number of days it takes to orbit
+
+        const dynamicAngle = initialAngle + elapsedSeconds * radiansPerSecond;
+
+        asteroid.position.x = -290 + psycheOrbitRadius * Math.cos(-dynamicAngle);
+        asteroid.position.z = 0 + psycheOrbitRadius * Math.sin(-dynamicAngle);
+
+        // accurate axis
+        const psycheRotationSpeed = (Math.PI * 2) / (4.2 * 60 * 60);
+        asteroid.rotation.z += simDelta * psycheRotationSpeed;
+
+        controls.update();
+
+        if (!isOverheadView) {
+          if (currentView === 'psyche' && asteroid) {
+            const previousTarget = controls.target.clone();
+            const newTarget = asteroid.position.clone();
+            const targetDelta = newTarget.clone().sub(previousTarget);
+            
+            // Move the camera by the same delta
+            camera.position.add(targetDelta);
+
+            // Update the control target to the asteroid
+            controls.target.copy(newTarget);
+          }
+
+        else if (currentView === 'earth' && earth) {
+          const previousTarget = controls.target.clone();
+          const newTarget = earth.position.clone();
+          const targetDelta = newTarget.clone().sub(previousTarget);
+          
+          // Move the camera by the same delta
+          camera.position.add(targetDelta);
+
+          // Update the control target to the earth
+          controls.target.copy(newTarget);
+        }
+      }
+      
+      controls.update();
+
+      if (earth) {
+        const earthAngle = initialEarthAngle + elapsedSeconds * earthRadiansPerSecond;
+        
+        earth.position.x = -330 + earthOrbitRadius * Math.cos(-earthAngle);
+        earth.position.z = 0 + earthOrbitRadius * Math.sin(-earthAngle);
+
+        const earthRotationSpeed = (Math.PI * 2) / (24 * 60 * 60);
+        earth.rotation.y += simDelta * earthRotationSpeed;
+      }
+    }
+
+    // Render with bloom
+    if (bloomComposer && finalComposer) {
+      camera.layers.set(0);
+      renderer.clear();
+      finalComposer.render();
+
+      camera.layers.set(0);
+      bloomComposer.render();
+        
+      camera.layers.set(0);
+    }
+
+    else {
+      renderer.render(scene, camera);
+    }
+
+    if ( earth ) {
+      const earthWorldPos = new THREE.Vector3();
+      earth.getWorldPosition( earthWorldPos );
+      earthLabel.position.set(
+        earthWorldPos.x,
+        earthWorldPos.y + 6,
+        earthWorldPos.z
+      );
+    }
+
+    // only update the Psyche label if that model is ready:
+    if ( asteroid ) {
+      const psycheWorldPos = new THREE.Vector3();
+      asteroid.getWorldPosition( psycheWorldPos );
+      psycheLabel.position.set(
+        psycheWorldPos.x,
+        psycheWorldPos.y + 1,
+        psycheWorldPos.z
+      );
+    }
+
+    labelRenderer.setSize( window.innerWidth, window.innerHeight );
+    labelRenderer.render( scene, camera );
+  }
+
+  animate();
+
+  resetBtn.addEventListener('click', () => {
+    initialAsteroidPosition = getInitialAsteroidPosition();
+    elapsedSeconds = 0;
+  });
+
+  // Handle window resizing
+  window.addEventListener("resize", () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+      
+    if (bloomComposer && finalComposer) {
+      bloomComposer.setSize(window.innerWidth, window.innerHeight);
+      finalComposer.setSize(window.innerWidth, window.innerHeight);
+    }
+  });
+});
+</script>
+</body>
+</html>
