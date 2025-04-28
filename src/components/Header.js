@@ -8,7 +8,7 @@ const Header = () => {
   return (
     <header> 
       <a href="https://psyche.asu.edu/" target="_blank" rel="noopener noreferrer">   {/* Clicking the psyche logo takes you to the main psyche website */}
-        <img src="/assets/psyche_logo.png" alt="Psyche Logo" className="psyche-logo" />
+        <img src={`${process.env.PUBLIC_URL}/assets/psyche_logo.png`} alt="Psyche Logo" className="psyche-logo" />
       </a>
 
       <div className="header-buttons">

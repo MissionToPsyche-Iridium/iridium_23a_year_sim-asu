@@ -14,7 +14,7 @@ import './styles.css';
 
 function App() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <Header />    {/* Display header on all pages */}
       <main>
         <Routes>
